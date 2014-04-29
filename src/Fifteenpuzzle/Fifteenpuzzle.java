@@ -622,9 +622,9 @@ public class Fifteenpuzzle
                     if( tile < 5 ) {
                         if( position < 5 ) {
                             distance = 0;
-                        } else if( position < 9 ) {
+                        } else if( position < 9 && position > 4) {
                             distance = 1;
-                        } else if( position < 13 ) {
+                        } else if( position < 13 && position > 8) {
                             distance = 2;
                         } else {
                             distance = 3;
@@ -633,9 +633,9 @@ public class Fifteenpuzzle
                     } else if( tile < 9 ) {
                         if( position < 5 ) {
                             distance = 1;
-                        } else if( position < 9 ) {
+                        } else if( position < 9 && position > 4 ) {
                             distance = 0;
-                        } else if( position < 13 ) {
+                        } else if( position < 13 && position > 8 ) {
                             distance = 1;
                         } else {
                             distance = 2;
@@ -644,9 +644,9 @@ public class Fifteenpuzzle
                     } else if( tile < 13 ) {
                         if( position < 5 ) {
                             distance = 2;
-                        } else if( position < 9 ) {
+                        } else if( position < 9 && position > 4 ) {
                             distance = 1;
-                        } else if( position < 13 ) {
+                        } else if( position < 13 && position > 8 ) {
                             distance = 0;
                         } else {
                             distance = 1;
@@ -655,9 +655,9 @@ public class Fifteenpuzzle
                     } else {
                         if( position < 5 ) {
                             distance = 3;
-                        } else if( position < 9 ) {
+                        } else if( position < 9 && position > 4 ) {
                             distance = 2;
-                        } else if( position < 13 ) {
+                        } else if( position < 13 && position > 8 ) {
                             distance = 1;
                         } else {
                             distance = 0;

@@ -156,16 +156,13 @@ public class Decoder
         Decoder decoder = new Decoder();
         
         SolverType solver = null;
-        switch( args[3] ) {
-            case "zchaff":
-                solver = SolverType.ZCHAFF;
-                break;
-            case "siege":
-                solver = SolverType.SIEGE;
-                break;
-            default:
-                System.out.println( "Solver type not supported" );
-                System.exit( 0 );
+        if( args[3].equals( "zchaff" ) ) {
+            solver = SolverType.ZCHAFF;
+        } else if ( args[3].equals( "siege" ) ) {
+            solver = SolverType.SIEGE;
+        } else {
+            System.out.println( "Solver type not supported" );
+            System.exit( 0 );
         }
         
         decoder.decodeSolution( args[0], args[1], args[2], solver );
