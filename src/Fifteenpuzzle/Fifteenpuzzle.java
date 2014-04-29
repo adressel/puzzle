@@ -35,7 +35,7 @@ public class Fifteenpuzzle
             this.position_values[i] = i + 1;
         }
         
-        this.step_values = new Integer[81];
+        this.step_values = new Integer[11];
         for( int i = 0; i < step_values.length; i++ ) {
             this.step_values[i] = i + 1;
         }
@@ -630,6 +630,326 @@ public class Fifteenpuzzle
         return initial_state;
     }
             
+    
+    // Task decomposition
+    
+    private Set<Rule> createDistanceVariables()
+    {
+        Set<Rule> rule9 = new HashSet<Rule>();
+        
+        for( Integer step : step_values ) {
+        
+        //for( int i = 0; i < 2; i++ ) {
+            
+            /*int step;
+            if( i == 0 ) {
+                step = 1;
+            } else {
+                step = this.step_values.length;
+            }
+            */
+            
+            for( int tile : this.tile_values ) {
+                for( int position : this.position_values ) {
+                    
+                    Set<Relation> conditions = new HashSet<Relation>();
+                    
+                    Set<Constant> constants1 = new HashSet<Constant>();
+                    constants1.add( new Constant<Integer>( "tile", tile ) );
+                    constants1.add( new Constant<Integer>( "position", position ) );
+                    constants1.add( new Constant<Integer>( "step", step ) );
+                    conditions.add( new Relation( "TP", true, constants1 ) );
+                    
+                    Set<Relation> outcomes = new HashSet<Relation>();
+                    
+                    // Manhattan distance:
+                    int distance;
+                    if( tile < 5 ) {
+                        if( position < 5 ) {
+                            distance = 0;
+                        } else if( position < 9 ) {
+                            distance = 1;
+                        } else if( position < 13 ) {
+                            distance = 2;
+                        } else {
+                            distance = 3;
+                        }
+                        
+                    } else if( tile < 9 ) {
+                        if( position < 5 ) {
+                            distance = 1;
+                        } else if( position < 9 ) {
+                            distance = 0;
+                        } else if( position < 13 ) {
+                            distance = 1;
+                        } else {
+                            distance = 2;
+                        }
+                        
+                    } else if( tile < 13 ) {
+                        if( position < 5 ) {
+                            distance = 2;
+                        } else if( position < 9 ) {
+                            distance = 1;
+                        } else if( position < 13 ) {
+                            distance = 0;
+                        } else {
+                            distance = 1;
+                        }
+                        
+                    } else {
+                        if( position < 5 ) {
+                            distance = 3;
+                        } else if( position < 9 ) {
+                            distance = 2;
+                        } else if( position < 13 ) {
+                            distance = 1;
+                        } else {
+                            distance = 0;
+                        }
+                        
+                    }
+                    
+                    distance += Math.abs( tile%4 - position%4 );
+                    
+                    Set<Constant> constants2 = new HashSet<Constant>();
+                    constants2.add( new Constant<Integer>( "tile", tile ) );
+                    constants2.add( new Constant<Integer>( "distance", distance ) ) ;
+                    constants2.add( new Constant<Integer>( "step", step ) );
+                    outcomes.add( new Relation( "DIST", true, constants2 ) );
+                    
+                    rule9.add( new Rule( conditions, outcomes ) );
+                }
+            }
+        }
+        
+        
+        return rule9;
+    }
+    
+    // DIST( tile, distance_1, step ) => ~DIST( tile, distance_2, step )
+    // for all distance_1 != distance_2
+    private Set<Rule> disambiguateDistancesRule()
+    {
+        Set<Rule> rules = new HashSet<Rule>();
+        
+        for( Integer step : step_values ) {
+        
+        //for( int i = 0; i < 2; i++ ) {
+            
+            /*
+            int step;
+            if( i == 0 ) {
+                step = 1;
+            } else {
+                step = step_values.length;
+            }
+            */
+                    
+            for( Integer tile : tile_values ) {
+                
+                int max_distance;
+                if( tile == 1 || tile == 4 || tile == 13 || tile == 16 ) {
+                    max_distance = 6;
+                } else if( tile == 2 || tile == 3 || tile == 5 || tile == 8 || tile == 9 || tile == 12 
+                        || tile == 14 || tile == 15 ) {
+                    max_distance = 5;
+                } else {
+                    max_distance = 4;
+                }
+                
+                for( int distance = 0; distance <= max_distance; distance++ ) {
+                    Set<Relation> conditions = new HashSet<Relation>();
+                
+                    Set<Constant> constants1 = new HashSet<Constant>();
+                    constants1.add( new Constant<Integer>( "tile", tile ) );
+                    constants1.add( new Constant<Integer>( "distance", distance ) );
+                    constants1.add( new Constant<Integer>( "step", step ) );
+                    conditions.add( new Relation( "DIST", true, constants1 ) );
+                    
+                    for( int dist = 0; dist <= max_distance; dist++ ) {
+                        
+                        if( distance != dist ) {
+                            
+                            Set<Relation> outcomes = new HashSet<Relation>();
+                            
+                            Set<Constant> constants2 = new HashSet<Constant>();
+                            constants2.add( new Constant<Integer>( "tile", tile ) );
+                            constants2.add( new Constant<Integer>( "distance", dist ) );
+                            constants2.add( new Constant<Integer>( "step", step ) );
+                            outcomes.add( new Relation( "DIST", false, constants2 ) );
+                            
+                            rules.add( new Rule( conditions, outcomes ) );
+                            
+                        }
+                    }
+                }
+            } 
+        }
+        
+        return rules;
+    }
+    
+    private Set<Rule> distancesOption2()
+    {
+        Set<Rule> rules = new HashSet<Rule>();
+        
+        
+        // Don't shift tiles that are in their correct place.
+        for( int tile : this.tile_values ) {
+            int max_distance;
+            if( tile == 1 || tile == 4 || tile == 13 || tile == 16 ) {
+                max_distance = 6;
+            } else if( tile == 2 || tile == 3 || tile == 5 || tile == 8 || tile == 9 || tile == 12 
+                    || tile == 14 || tile == 15 ) {
+                max_distance = 5;
+            } else {
+                max_distance = 4;
+            }
+            
+            
+            for( int distance = 1; distance <= max_distance; distance++ ) {
+                
+                // Solve puzzle step by step:
+                // first tiles 1, 2, 3, 4; then 5, 9, 13; then 6, 7, 8; then 10, 11, 12, 14, 15, 16
+                Set<Integer> first = new HashSet<Integer>();
+                first.add( 1 ); first.add( 2 ); first.add( 3 ); first.add( 4 );
+                
+                Set<Integer> second = new HashSet<Integer>();
+                second.add( 5 ); second.add( 9 ); second.add( 13 );
+                
+                Set<Integer> third = new HashSet<Integer>();
+                third.add( 6 ); third.add( 7 ); third.add( 8 );
+                
+                Set<Integer> fourth = new HashSet<Integer>();
+                fourth.add( 10 ); fourth.add( 11 ); fourth.add( 12 ); fourth.add( 14 ); fourth.add( 15 ); fourth.add( 16 );
+                
+                // DIST( tile:1, distance:dist!=0, step:0 ) => ~DIST( tile:1, distance:dist-x - max_dist, step:n )
+                // DIST( tile:1, distance:0, step:0 ) AND DIST( tile:2, distance:dist!=0, step:0 )
+                //      => ~DIST( tile:2, distance:dist-x - max_dist, step:n )
+                
+                Set<Integer> relaxed_positions = new HashSet<Integer>();
+        
+                Set<Relation> conditions = new HashSet<Relation>();
+                
+                Set<Constant> constants1 = new HashSet<Constant>();
+                constants1.add( new Constant<Integer>( "tile", tile ) );
+                constants1.add( new Constant<Integer>( "distance", distance ) );
+                constants1.add( new Constant<Integer>( "step", 1 ) );
+                conditions.add( new Relation( "DIST", true, constants1 ) );
+        
+                for(Integer tile2 : first ) {
+                    if( tile2 < tile || !first.contains( tile ) ) {
+                            
+                        relaxed_positions.add( tile2 );
+                    }
+                }
+                
+                
+                if( !first.contains( tile ) ) {
+                    for(Integer tile2 : second ) {
+                        if( tile2 < tile || !second.contains( tile ) ) {
+                            
+                            relaxed_positions.add( tile2 );
+                        }
+                    }
+                }
+                
+                if( !second.contains( tile ) && !first.contains( tile ) ) {
+                    for(Integer tile2 : third ) {
+                        if( tile2 < tile || !third.contains( tile ) ) {
+                            
+                            relaxed_positions.add( tile2 );
+                        }
+                    }
+                }
+                
+                
+                // -----------------------------------------------------------------------------------
+                // These tiles (in set 'fourth') must in fact be optimized in one step -> change implementation
+                if( !third.contains( tile ) && !second.contains( tile ) && !first.contains( tile ) ) {
+                    for(Integer tile2 : second ) {
+                        if( tile2 < tile || !fourth.contains( tile ) ) {
+                            
+                            relaxed_positions.add( tile2 );
+                        }
+                    }
+                }
+                // -----------------------------------------------------------------------------------
+
+                
+                
+                // all relaxed tiles have distance zero at step 0 -> conditions
+                for( Integer relaxed_position : relaxed_positions ) {
+                    
+                    Set<Constant> constants2 = new HashSet<Constant>();
+                    constants2.add( new Constant<Integer>( "tile", relaxed_position ) );
+                    constants2.add( new Constant<Integer>( "distance", 0 ) );
+                    constants2.add( new Constant<Integer>( "step", 1 ) );
+                    conditions.add( new Relation( "DIST", true, constants2 ) );
+                    
+                }
+                
+                // distance must be zero for all relaxed positions after n steps -> outcome -> rule
+                for( Integer relaxed_position : relaxed_positions ) {
+                    
+                    Set<Relation> outcomes = new HashSet<Relation>();
+                
+                    Set<Constant> constants2 = new HashSet<Constant>();
+                    constants2.add( new Constant<Integer>( "tile", relaxed_position ) );
+                    constants2.add( new Constant<Integer>( "distance", 0 ) );
+                    constants2.add( new Constant<Integer>( "step", this.step_values.length ) );
+                    outcomes.add( new Relation( "DIST", true, constants2 ) );
+
+                    rules.add( new Rule( conditions, outcomes ) );
+                }
+                
+                
+                // by how much must the distance be reduced in n steps? -> x
+                int x = 1; // dependent on the current state...
+                
+                // all distances greater than distance - x are not allowed after n steps -> outcome -> rule
+                for( int dist = distance - x; dist <= max_distance; dist++ ) {
+                    
+                    Set<Relation> outcomes = new HashSet<Relation>();
+                
+                    Set<Constant> constants4 = new HashSet<Constant>();
+                    constants4.add( new Constant<Integer>( "tile", tile ) );
+                    constants4.add( new Constant<Integer>( "distance", dist ) );
+                    constants4.add( new Constant<Integer>( "step", step_values.length ) );
+                    outcomes.add( new Relation( "DIST", false, constants4 ) );
+                    
+                    rules.add( new Rule( conditions, outcomes ) );
+                }
+            }
+        }
+        
+        return rules;
+    }
+    
+    // ensure that an operation is executed at each step (by saying that tile 16 must be 
+    // on some position at step n
+    private Set<Rule> createRule9()
+    {
+        Set<Rule> rule9 = new HashSet<Rule>();
+        
+        Set<Relation> conditions = new HashSet<Relation>();
+        
+        for( Integer position : position_values ) {
+            
+            Set<Constant> constants = new HashSet<Constant>();
+            constants.add( new Constant<Integer>( "tile", tile_values.length ) );
+            constants.add( new Constant<Integer>( "position", position ) );
+            constants.add( new Constant<Integer>( "step", step_values.length ) );
+            conditions.add( new Relation( "TP", true, constants ) );
+            
+        }
+        rule9.add( new Rule( conditions ) );
+        
+        return rule9;
+    }
+    
+    
     
     
     public static void main( String[] args )
