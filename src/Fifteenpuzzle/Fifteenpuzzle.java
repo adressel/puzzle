@@ -52,8 +52,37 @@ public class Fifteenpuzzle
             { 9, 13, 14, 15 }
         };
     }
+    
+    private Relation createConstantTPRelation( int tile, int position, int step, boolean sign ) 
+    {
+        Set<Constant> constants = new HashSet<Constant>();
+        constants.add( new Constant<Integer>( "tile", tile ) );
+        constants.add( new Constant<Integer>( "position", position ) );
+        constants.add( new Constant<Integer>( "step", step ) );
         
+        return new Relation( "TP", sign, constants );
+    }
+    
+    private Relation createConstantEORelation( Operation operation, int step, boolean sign ) 
+    {
+        Set<Constant> constants = new HashSet<Constant>();
+        constants.add( new Constant<Operation>( "operation", operation ) );
+        constants.add( new Constant<Integer>( "step", step ) );
         
+        return new Relation( "EO", sign, constants );
+    }
+    
+    private Relation createConstantDISTRelation( int tile, int distance, int step, boolean sign )
+    {
+        Set<Constant> constants = new HashSet<Constant>();
+        constants.add( new Constant<Integer>( "tile", tile ) );
+        constants.add( new Constant<Integer>( "distance", distance ) );
+        constants.add( new Constant<Integer>( "step", step ) );
+        
+        return new Relation( "DIST", sign, constants );
+    }
+            
+            
     // Rule #1:
     private Set<Rule> createRule1()
     {
@@ -184,34 +213,27 @@ public class Fifteenpuzzle
                 for( Integer position : positions ) {
                     
                     Set<Relation> conditions = new HashSet<Relation>();
-                    
-                    Set<Constant> constants1 = new HashSet<Constant>();
-                    constants1.add( new Constant<Integer>( "tile", tile_values.length ) );
-                    constants1.add( new Constant<Integer>( "position", position ) ) ;
-                    constants1.add( new Constant<Integer>( "step", step ) );
-                    conditions.add( new Relation( "TP", true, constants1 ) );
+                    conditions.add( createConstantTPRelation( tile_values.length, position, step, true) );
                     
                     Set<Relation> outcomes = new HashSet<Relation>();
                     
                     Set<Constant> constants2 = new HashSet<Constant>();
                     switch( i ) {
                         case 1:
-                            constants2.add( new Constant<Operation>( "operation", Operation.UP ) );
+                            outcomes.add( createConstantEORelation( Operation.UP, step, false ) ); //constants2.add( new Constant<Operation>( "operation", Operation.UP ) );
                             break;
                         case 2:
-                            constants2.add( new Constant<Operation>( "operation", Operation.LEFT ) );
+                            outcomes.add( createConstantEORelation( Operation.LEFT, step, false ) );
                             break;
                         case 3:
-                            constants2.add( new Constant<Operation>( "operation", Operation.RIGHT ) );
+                            outcomes.add( createConstantEORelation( Operation.RIGHT, step, false ) );
                             break;
                         case 4:
-                            constants2.add( new Constant<Operation>( "operation", Operation.DOWN ) );
+                            outcomes.add( createConstantEORelation( Operation.DOWN, step, false ) );
                             break;
                         default:
                             System.out.println( "Error creating rule 3, count too high" );
                     }
-                    constants2.add( new Constant<Integer>( "step", step ) );
-                    outcomes.add( new Relation( "EO", false, constants2 ) );
                     
                     rule3.add( new Rule( conditions, outcomes ) );
                 }
@@ -267,10 +289,11 @@ public class Fifteenpuzzle
         
         Set<Relation> conditions1 = new HashSet<Relation>();
         for( Integer i : step_values ) {
+            
             Set<Constant> constants1 = new HashSet<Constant>();
             constants1.add( new Constant<Integer>( "value", i ) );
-            
             conditions1.add( new Relation( "helper_var", true, constants1 ) );
+        
         }
         
         rule5.add( new Rule( conditions1 ) );
@@ -281,18 +304,11 @@ public class Fifteenpuzzle
             for( Integer tile : tile_values ) {
                 
                 Set<Relation> conditions2 = new HashSet<Relation>();
+                conditions2.add( createConstantTPRelation( tile, tile, step, true ) );
                 
-                Set<Constant> constants2a = new HashSet<Constant>();
-                constants2a.add( new Constant<Integer>( "tile", tile ) );
-                constants2a.add( new Constant<Integer>( "position", tile ) );
-                constants2a.add( new Constant<Integer>( "step", step ) );
-                
-                conditions2.add( new Relation( "TP", true, constants2a ) );
-                
-                Set<Constant> constants2b = new HashSet<Constant>();
-                constants2b.add( new Constant<Integer>( "value", step ) );
-                
-                conditions2.add( new Relation( "helper_var", false, constants2b ) );
+                Set<Constant> constants2 = new HashSet<Constant>();
+                constants2.add( new Constant<Integer>( "value", step ) );
+                conditions2.add( new Relation( "helper_var", false, constants2 ) );
                 
                 rule5.add( new Rule( conditions2 ) );
             }
@@ -332,39 +348,28 @@ public class Fifteenpuzzle
                             Set<Relation> conditions = new HashSet<Relation>();
                             
                             // 16-tile
-                            Set<Constant> constants1 = new HashSet<Constant>();
-                            constants1.add( new Constant<Integer>( "tile", tile_values.length ) );
-                            constants1.add( new Constant<Integer>( "position", position ) );
-                            constants1.add( new Constant<Integer>( "step", step ) );
-                            conditions.add( new Relation( "TP", true, constants1 ) );
+                            conditions.add( createConstantTPRelation( tile_values.length, position, step, true ) );
                             
                             // operation
-                            Set<Constant> constants2 = new HashSet<Constant>();
-                            constants2.add( new Constant<Operation>( "operation", operation ) );
-                            constants2.add( new Constant<Integer>( "step", step) );
-                            conditions.add( new Relation( "EO", true, constants2 ) );
+                            conditions.add( createConstantEORelation( operation, step, true ) );
                             
                             // second affected tile
-                            Set<Constant> constants3 = new HashSet<Constant>();
-                            constants3.add( new Constant<Integer>( "tile", tile ) );
-                            constants3.add( new Constant<Integer>( "step", step ) );
-                            
                             int pos_2 = -1;
                             switch( operation ) {
                                 case UP:
-                                    constants3.add( new Constant<Integer>( "position", position - 4 ) );
+                                    conditions.add( createConstantTPRelation( tile, position - 4, step, true ) );
                                     pos_2 = position - 4;
                                     break;
                                 case DOWN:
-                                    constants3.add( new Constant<Integer>( "position", position + 4 ) );
+                                    conditions.add( createConstantTPRelation( tile, position + 4, step, true ) );
                                     pos_2 = position + 4;
                                     break;
                                 case LEFT:
-                                    constants3.add( new Constant<Integer>( "position", position - 1 ) );
+                                    conditions.add( createConstantTPRelation( tile, position - 1, step, true ) );
                                     pos_2 = position - 1;
                                     break;
                                 case RIGHT:
-                                    constants3.add( new Constant<Integer>( "position", position + 1 ) );
+                                    conditions.add( createConstantTPRelation( tile, position + 1, step, true ) );
                                     pos_2 = position + 1;
                                     break;
                                 default:
@@ -375,30 +380,17 @@ public class Fifteenpuzzle
                                 System.out.println( "Error: pos_2 == -1" );
                                 System.exit( 0 );
                             }
-                            
-                            conditions.add( new Relation( "TP", true, constants3 ) );
-                            
+                                                        
                             Set<Relation> outcomes1 = new HashSet<Relation>();
                             
                             // modified 16-tile
-                            Set<Constant> constants4 = new HashSet<Constant>();
-                            constants4.add( new Constant<Integer>( "tile", tile_values.length ) );
-                            constants4.add( new Constant<Integer>( "position", pos_2 ) );
-                            constants4.add( new Constant<Integer>( "step", step + 1 ) );
-                            outcomes1.add( new Relation( "TP", true, constants4 ) );
-                            
+                            outcomes1.add( createConstantTPRelation( tile_values.length, pos_2, step + 1, true ) );
                             rule6_1.add( new Rule( conditions, outcomes1 ) ); 
                             
-                            // careful: usually would have to create new Constant objects
                             Set<Relation> outcomes2 = new HashSet<Relation>();
                             
                             // modified second tile
-                            Set<Constant> constants5 = new HashSet<Constant>();
-                            constants5.add( new Constant<Integer>( "tile", tile ) );
-                            constants5.add( new Constant<Integer>( "position", position ) );
-                            constants5.add( new Constant<Integer>( "step", step + 1 ) );
-                            outcomes2.add( new Relation( "TP", true, constants5 ) );
-                            
+                            outcomes2.add( createConstantTPRelation( tile, position, step + 1, true ) );
                             rule6_1.add( new Rule( conditions, outcomes2 ) );
                             
                         }
@@ -473,34 +465,18 @@ public class Fifteenpuzzle
                                     Set<Relation> conditions = new HashSet<Relation>();
 
                                     // 16-tile
-                                    Set<Constant> constants1 = new HashSet<Constant>();
-                                    constants1.add( new Constant<Integer>( "tile", tile_values.length ) );
-                                    constants1.add( new Constant<Integer>( "position", position ) );
-                                    constants1.add( new Constant<Integer>( "step", step ) );
-                                    conditions.add( new Relation( "TP", true, constants1 ) );
+                                    conditions.add( createConstantTPRelation( tile_values.length, position, step, true ) );
 
                                     // operation
-                                    Set<Constant> constants2 = new HashSet<Constant>();
-                                    constants2.add( new Constant<Operation>( "operation", operation ) );
-                                    constants2.add( new Constant<Integer>( "step", step) );
-                                    conditions.add( new Relation( "EO", true, constants2 ) );
+                                    conditions.add( createConstantEORelation( operation, step, true ) );
 
-                                    // not affected tile at step s
-                                    Set<Constant> constants3 = new HashSet<Constant>();
-                                    constants3.add( new Constant<Integer>( "tile", tile ) );
-                                    constants3.add( new Constant<Integer>( "position", remaining_position ) );
-                                    constants3.add( new Constant<Integer>( "step", step ) );
-                                    conditions.add( new Relation( "TP", i == 0, constants3 ) );
+                                    // tile that is not affected at step s
+                                    conditions.add( createConstantTPRelation( tile, remaining_position, step, i == 0 ) );
 
                                     Set<Relation> outcomes = new HashSet<Relation>();
 
                                     // not affected tile at step s+1
-                                    Set<Constant> constants4 = new HashSet<Constant>();
-                                    constants4.add( new Constant<Integer>( "tile", tile ) );
-                                    constants4.add( new Constant<Integer>( "position", remaining_position ) );
-                                    constants4.add( new Constant<Integer>( "step", step + 1 ) );
-                                    outcomes.add( new Relation( "TP", i == 0, constants4 ) );
-
+                                    outcomes.add( createConstantTPRelation( tile, remaining_position, step + 1, i == 0 ) );
                                     rule6_2.add( new Rule( conditions, outcomes ) );
 
                                 }
@@ -510,7 +486,6 @@ public class Fifteenpuzzle
                 }
             }
         }
-        
         
         return rule6_2;
     }
@@ -528,19 +503,13 @@ public class Fifteenpuzzle
             
             Set<Relation> conditions = new HashSet<Relation>();
             for( Operation operation : Operation.values() ) {
-                Set<Constant> constants = new HashSet<Constant>();
-                constants.add( new Constant<Integer>( "step", step ) );
-                constants.add( new Constant<Operation>( "operation", operation ) );
-                conditions.add( new Relation( "EO", false, constants ) );
+                
+                conditions.add( createConstantEORelation( operation, step, false ) );
             }
             
             for( Operation operation : Operation.values() ) {
                 Set<Relation> outcomes = new HashSet<Relation>();
-                
-                Set<Constant> constants = new HashSet<Constant>();
-                constants.add( new Constant<Integer>( "step", step + 1 ) );
-                constants.add( new Constant<Operation>( "operation", operation ) );
-                outcomes.add( new Relation( "EO", false, constants ) );
+                outcomes.add( createConstantEORelation( operation, step + 1, false ) );
                 
                 rule7.add( new Rule( conditions, outcomes ) );
             }
@@ -566,21 +535,12 @@ public class Fifteenpuzzle
             
                     Set<Relation> conditions = new HashSet<Relation>();
                     for( Operation operation : Operation.values() ) {
-                        Set<Constant> constants = new HashSet<Constant>();
-                        constants.add( new Constant<Operation>( "operation", operation ) );
-                        constants.add( new Constant<Integer>( "step", step ) );
-
-                        conditions.add( new Relation( "EO", false, constants ) );
+                        
+                        conditions.add( createConstantEORelation( operation, step, false ) );
                     }
 
                     Set<Relation> outcomes = new HashSet<Relation>();
-                    
-                    Set<Constant> constants = new HashSet<Constant>();
-                    constants.add( new Constant<Integer>( "tile", tile) );
-                    constants.add( new Constant<Integer>( "position", position ) );
-                    constants.add( new Constant<Integer>( "step", step + 1 ) );
-                    
-                    outcomes.add( new Relation( "TP", false, constants ) );
+                    outcomes.add( createConstantTPRelation( tile, position, step + 1, false ) );
                     
                     rule8.add( new Rule( conditions, outcomes ) );
                 }
@@ -653,12 +613,7 @@ public class Fifteenpuzzle
                 for( int position : this.position_values ) {
                     
                     Set<Relation> conditions = new HashSet<Relation>();
-                    
-                    Set<Constant> constants1 = new HashSet<Constant>();
-                    constants1.add( new Constant<Integer>( "tile", tile ) );
-                    constants1.add( new Constant<Integer>( "position", position ) );
-                    constants1.add( new Constant<Integer>( "step", step ) );
-                    conditions.add( new Relation( "TP", true, constants1 ) );
+                    conditions.add( createConstantTPRelation( tile, position, step, true ) );
                     
                     Set<Relation> outcomes = new HashSet<Relation>();
                     
@@ -712,17 +667,11 @@ public class Fifteenpuzzle
                     
                     distance += Math.abs( tile%4 - position%4 );
                     
-                    Set<Constant> constants2 = new HashSet<Constant>();
-                    constants2.add( new Constant<Integer>( "tile", tile ) );
-                    constants2.add( new Constant<Integer>( "distance", distance ) ) ;
-                    constants2.add( new Constant<Integer>( "step", step ) );
-                    outcomes.add( new Relation( "DIST", true, constants2 ) );
-                    
+                    outcomes.add( createConstantDISTRelation( tile, distance, step, true ) );
                     rule9.add( new Rule( conditions, outcomes ) );
                 }
             }
         }
-        
         
         return rule9;
     }
@@ -733,18 +682,18 @@ public class Fifteenpuzzle
     {
         Set<Rule> rules = new HashSet<Rule>();
         
-        for( Integer step : step_values ) {
+        //for( Integer step : step_values ) {
         
-        //for( int i = 0; i < 2; i++ ) {
+        for( int i = 0; i < 2; i++ ) {
             
-            /*
+            
             int step;
             if( i == 0 ) {
                 step = 1;
             } else {
                 step = step_values.length;
             }
-            */
+            
                     
             for( Integer tile : tile_values ) {
                 
@@ -760,24 +709,14 @@ public class Fifteenpuzzle
                 
                 for( int distance = 0; distance <= max_distance; distance++ ) {
                     Set<Relation> conditions = new HashSet<Relation>();
-                
-                    Set<Constant> constants1 = new HashSet<Constant>();
-                    constants1.add( new Constant<Integer>( "tile", tile ) );
-                    constants1.add( new Constant<Integer>( "distance", distance ) );
-                    constants1.add( new Constant<Integer>( "step", step ) );
-                    conditions.add( new Relation( "DIST", true, constants1 ) );
+                    conditions.add( createConstantDISTRelation( tile, distance, step, true ) );
                     
                     for( int dist = 0; dist <= max_distance; dist++ ) {
                         
                         if( distance != dist ) {
                             
                             Set<Relation> outcomes = new HashSet<Relation>();
-                            
-                            Set<Constant> constants2 = new HashSet<Constant>();
-                            constants2.add( new Constant<Integer>( "tile", tile ) );
-                            constants2.add( new Constant<Integer>( "distance", dist ) );
-                            constants2.add( new Constant<Integer>( "step", step ) );
-                            outcomes.add( new Relation( "DIST", false, constants2 ) );
+                            outcomes.add( createConstantDISTRelation( tile, dist, step, false ) );
                             
                             rules.add( new Rule( conditions, outcomes ) );
                             
@@ -827,17 +766,11 @@ public class Fifteenpuzzle
                 // DIST( tile:1, distance:dist!=0, step:0 ) => ~DIST( tile:1, distance:dist-x - max_dist, step:n )
                 // DIST( tile:1, distance:0, step:0 ) AND DIST( tile:2, distance:dist!=0, step:0 )
                 //      => ~DIST( tile:2, distance:dist-x - max_dist, step:n )
-                
-                Set<Integer> relaxed_positions = new HashSet<Integer>();
         
                 Set<Relation> conditions = new HashSet<Relation>();
-                
-                Set<Constant> constants1 = new HashSet<Constant>();
-                constants1.add( new Constant<Integer>( "tile", tile ) );
-                constants1.add( new Constant<Integer>( "distance", distance ) );
-                constants1.add( new Constant<Integer>( "step", 1 ) );
-                conditions.add( new Relation( "DIST", true, constants1 ) );
+                conditions.add( createConstantDISTRelation( tile, distance, 1, true ) );
         
+                Set<Integer> relaxed_positions = new HashSet<Integer>();
                 for(Integer tile2 : first ) {
                     if( tile2 < tile || !first.contains( tile ) ) {
                             
@@ -882,24 +815,14 @@ public class Fifteenpuzzle
                 // all relaxed tiles have distance zero at step 0 -> conditions
                 for( Integer relaxed_position : relaxed_positions ) {
                     
-                    Set<Constant> constants2 = new HashSet<Constant>();
-                    constants2.add( new Constant<Integer>( "tile", relaxed_position ) );
-                    constants2.add( new Constant<Integer>( "distance", 0 ) );
-                    constants2.add( new Constant<Integer>( "step", 1 ) );
-                    conditions.add( new Relation( "DIST", true, constants2 ) );
-                    
+                    conditions.add( createConstantDISTRelation( relaxed_position, 0, 1, true ) );
                 }
                 
                 // distance must be zero for all relaxed positions after n steps -> outcome -> rule
                 for( Integer relaxed_position : relaxed_positions ) {
                     
                     Set<Relation> outcomes = new HashSet<Relation>();
-                
-                    Set<Constant> constants2 = new HashSet<Constant>();
-                    constants2.add( new Constant<Integer>( "tile", relaxed_position ) );
-                    constants2.add( new Constant<Integer>( "distance", 0 ) );
-                    constants2.add( new Constant<Integer>( "step", this.step_values.length ) );
-                    outcomes.add( new Relation( "DIST", true, constants2 ) );
+                    outcomes.add( createConstantDISTRelation( relaxed_position, 0, step_values.length, true ) );
 
                     rules.add( new Rule( conditions, outcomes ) );
                 }
@@ -912,12 +835,7 @@ public class Fifteenpuzzle
                 for( int dist = distance - x; dist <= max_distance; dist++ ) {
                     
                     Set<Relation> outcomes = new HashSet<Relation>();
-                
-                    Set<Constant> constants4 = new HashSet<Constant>();
-                    constants4.add( new Constant<Integer>( "tile", tile ) );
-                    constants4.add( new Constant<Integer>( "distance", dist ) );
-                    constants4.add( new Constant<Integer>( "step", step_values.length ) );
-                    outcomes.add( new Relation( "DIST", false, constants4 ) );
+                    outcomes.add( createConstantDISTRelation( tile, dist, step_values.length, false ) );
                     
                     rules.add( new Rule( conditions, outcomes ) );
                 }
@@ -937,13 +855,9 @@ public class Fifteenpuzzle
         
         for( Integer position : position_values ) {
             
-            Set<Constant> constants = new HashSet<Constant>();
-            constants.add( new Constant<Integer>( "tile", tile_values.length ) );
-            constants.add( new Constant<Integer>( "position", position ) );
-            constants.add( new Constant<Integer>( "step", step_values.length ) );
-            conditions.add( new Relation( "TP", true, constants ) );
-            
+            conditions.add( createConstantTPRelation( tile_values.length, position, step_values.length, true ) );            
         }
+        
         rule9.add( new Rule( conditions ) );
         
         return rule9;
@@ -982,7 +896,7 @@ public class Fifteenpuzzle
         }
         
         // Rule #5
-        grounded_instances.addAll( puzzle.createRule5() ); // are already grounded
+        // grounded_instances.addAll( puzzle.createRule5() ); // are already grounded
         
         // Rule #6
         grounded_instances.addAll( puzzle.createRule6_1() );
@@ -996,14 +910,14 @@ public class Fifteenpuzzle
         
         
         // task decomposition
-        //grounded_instances.addAll( puzzle.createDistanceVariables() );
-        //grounded_instances.addAll( puzzle.distancesOption2() );
-        //grounded_instances.addAll( puzzle.disambiguateDistancesRule() );
-        //grounded_instances.addAll( puzzle.createRule9() );
+        grounded_instances.addAll( puzzle.createDistanceVariables() );
+        grounded_instances.addAll( puzzle.distancesOption2() );
+        grounded_instances.addAll( puzzle.disambiguateDistancesRule() );
+        grounded_instances.addAll( puzzle.createRule9() );
         
         
         // Initial State
-        // grounded_instances.addAll( puzzle.encodeInitialState() );
+        grounded_instances.addAll( puzzle.encodeInitialState() );
         // write state to end of file instead, for each iteration
         
         
