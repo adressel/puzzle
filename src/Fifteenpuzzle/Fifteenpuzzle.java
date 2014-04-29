@@ -597,17 +597,17 @@ public class Fifteenpuzzle
     {
         Set<Rule> rule9 = new HashSet<Rule>();
         
-        for( Integer step : step_values ) {
+        // for( Integer step : step_values ) {
         
-        //for( int i = 0; i < 2; i++ ) {
+        for( int i = 0; i < 2; i++ ) {
             
-            /*int step;
+            int step;
             if( i == 0 ) {
                 step = 1;
             } else {
                 step = this.step_values.length;
             }
-            */
+            
             
             for( int tile : this.tile_values ) {
                 for( int position : this.position_values ) {
