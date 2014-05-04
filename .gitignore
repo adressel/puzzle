@@ -4,6 +4,12 @@ build/
 manifest.mf
 nbproject/
 
+#Project
+*.enc
+*.dict
+*.results
+*.sol
+
 
 .DS_Store
 *.class

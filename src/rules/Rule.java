@@ -97,7 +97,7 @@ public class Rule
             writer.newLine();
             
             // write the problem form cnf, the number of variables and the number of clauses
-            writer.write( "p cnf " + 3060 + " " + ( rules.size() /* + 256 */ ) ); // @Todo: how to get correct number of varialbes before calling method
+            writer.write( "p cnf " + 3060 + " " + ( rules.size() + 16 ) ); // @Todo: how to get correct number of varialbes before calling method
             writer.newLine();
             
             // write clauses to file, each of them followed by 0

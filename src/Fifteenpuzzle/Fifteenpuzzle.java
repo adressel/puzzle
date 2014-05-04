@@ -917,7 +917,7 @@ public class Fifteenpuzzle
         
         
         // Initial State
-        grounded_instances.addAll( puzzle.encodeInitialState() );
+        //grounded_instances.addAll( puzzle.encodeInitialState() );
         // write state to end of file instead, for each iteration
         
         
