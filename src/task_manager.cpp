@@ -9,6 +9,7 @@
 #include <map>
 #include <set>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 
@@ -58,7 +59,7 @@ void collect_operations_from_solution( std::set<string> &all_operations, std::se
         
         int step = atoi( (*it).substr( pos1+5, pos2-pos1 ).c_str() );
         string s = *it;
-        all_operations.insert( s.replace( pos1+5, pos2-pos1, to_string( step+number_of_operations ).c_str() ) );
+        all_operations.insert( s.replace( pos1+5, pos2-pos1, boost::lexical_cast<string>( step+number_of_operations ).c_str() ) );
     }
     number_of_operations += ops.size();
 }
@@ -128,7 +129,7 @@ void calculate_new_state( std::set<string> &outcome_state_as_string, std::set<st
         if( tile_position.substr( pos+5, 2 ).compare( "11" ) == 0 )
         {
             tile_position.replace( pos+5, 2, "1");
-            input_state_as_int.insert( to_string( dictionary[tile_position] ) );
+            input_state_as_int.insert( boost::lexical_cast<string>( dictionary[tile_position] ) );
         }
     }
 }
@@ -201,22 +202,22 @@ void encode_initial_state( int _11, int _12, int _13, int _14,
                            string cnf_file_name )
 {
     std::set<string> state;
-    state.insert( to_string( dictionary["TP( position:1 step:1 tile:" + to_string( _11 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:2 step:1 tile:" + to_string( _12 ) + " )"] ) ) ;
-    state.insert( to_string( dictionary["TP( position:3 step:1 tile:" + to_string( _13 ) + " )"] ) ) ;
-    state.insert( to_string( dictionary["TP( position:4 step:1 tile:" + to_string( _14 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:5 step:1 tile:" + to_string( _21 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:6 step:1 tile:" + to_string( _22 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:7 step:1 tile:" + to_string( _23 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:8 step:1 tile:" + to_string( _24 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:9 step:1 tile:" + to_string( _31 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:10 step:1 tile:" + to_string( _32 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:11 step:1 tile:" + to_string( _33 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:12 step:1 tile:" + to_string( _34 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:13 step:1 tile:" + to_string( _41 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:14 step:1 tile:" + to_string( _42 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:15 step:1 tile:" + to_string( _43 ) + " )"] ) );
-    state.insert( to_string( dictionary["TP( position:16 step:1 tile:" + to_string( _44 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:1 step:1 tile:" + boost::lexical_cast<string>( _11 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:2 step:1 tile:" + boost::lexical_cast<string>( _12 ) + " )"] ) ) ;
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:3 step:1 tile:" + boost::lexical_cast<string>( _13 ) + " )"] ) ) ;
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:4 step:1 tile:" + boost::lexical_cast<string>( _14 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:5 step:1 tile:" + boost::lexical_cast<string>( _21 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:6 step:1 tile:" + boost::lexical_cast<string>( _22 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:7 step:1 tile:" + boost::lexical_cast<string>( _23 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:8 step:1 tile:" + boost::lexical_cast<string>( _24 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:9 step:1 tile:" + boost::lexical_cast<string>( _31 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:10 step:1 tile:" + boost::lexical_cast<string>( _32 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:11 step:1 tile:" + boost::lexical_cast<string>( _33 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:12 step:1 tile:" + boost::lexical_cast<string>( _34 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:13 step:1 tile:" + boost::lexical_cast<string>( _41 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:14 step:1 tile:" + boost::lexical_cast<string>( _42 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:15 step:1 tile:" + boost::lexical_cast<string>( _43 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:16 step:1 tile:" + boost::lexical_cast<string>( _44 ) + " )"] ) );
     
     modify_cnf_file( cnf_file_name, state );
 }
@@ -318,7 +319,7 @@ int main( int argc, char** argv )
         
         
         // 4. add operations to set
-        collect_operations_from_solution( operations, ops, &number_of_operations );
+        collect_operations_from_solution( operations, ops, number_of_operations );
         
             
         // 5. write new state to end of file
