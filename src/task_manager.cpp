@@ -48,7 +48,7 @@ void populate_dictionary( string file_name, std::map<string, int> &variable_dict
 }
 
 
-void collect_operations_from_solution_file( std::set<string> &all_operations, std::set<string> &ops, int &number_of_operations )
+void collect_operations_from_solution( std::set<string> &all_operations, std::set<string> &ops, int &number_of_operations )
 {
     std::set<string>::iterator it;
     for( it = ops.begin(); it != ops.end(); ++it )
@@ -149,12 +149,25 @@ void decode_solution( string file_name, std::set<string> &outcome_state, std::se
     // siege.results should only contain a single line of output    
     if( in.good() )
     {
-        getline( in, line );
-        line = line.substr( line.find_first_of( "{" ), line.find_first_of( "}" )-line.find_first_of( "{" ) );
+        if( file_name.find( "siege" ) != std::string::npos ) 
+        {
+            getline( in, line );
+            line = line.substr( line.find_first_of( "{" ), line.find_first_of( "}" )-line.find_first_of( "{" ) );
+
+        } else if( file_name.find( "zchaff" ) != std::string::npos )
+        {
+            while( line.find( "Instance Satisfiable" ) == std::string::npos )
+            {
+                getline( in, line );
+            }
+            
+            getline( in, line );
+            
+        }
         
         std::vector<string> tokens;
         split( tokens, line, boost::is_any_of( " " ) );
-        
+
         std::vector<string>::iterator it;
         for( it = tokens.begin(); it != tokens.end(); ++it )
         {
@@ -164,7 +177,7 @@ void decode_solution( string file_name, std::set<string> &outcome_state, std::se
                 if( variable.substr( 0,2 ).compare( "EO" ) == 0 )
                 {
                     operations.insert( variable );
-                    
+
                 } else if( variable.substr( 0,2 ).compare( "TP" ) == 0 )
                 {
                     if( variable.find( "step:11" ) != string::npos )
@@ -173,7 +186,7 @@ void decode_solution( string file_name, std::set<string> &outcome_state, std::se
                     }
                 }
             }
-        }
+        }        
     }
     
     in.close();
@@ -211,8 +224,7 @@ void encode_initial_state( int _11, int _12, int _13, int _14,
 
 bool final_state_reached( std::set<string> state )
 {
-    
-    return true;
+    return false;
 }
 
 
@@ -236,10 +248,12 @@ int main( int argc, char** argv )
     
     
     // operations
-    std::set<int, string> operations;
-    //int number_of_operations = 0;
+    std::set<string> operations;
+    int number_of_operations = 0;
 
 
+    // state
+    std::set<string> state;
     
     // 1. write initial state to end of file
     encode_initial_state( 1,  2,  3,  4,
@@ -252,7 +266,8 @@ int main( int argc, char** argv )
     
     // while final state is not reached:
     while( !final_state_reached( state ) )
-    {
+    {        
+        state.clear();
         
         // 2. run sat solver
         
@@ -274,7 +289,6 @@ int main( int argc, char** argv )
                 exit( EXIT_FAILURE );
                 break;
             default:
-                cout << "This is a message from the parent" << endl;
                 break;
         }
   
@@ -286,13 +300,9 @@ int main( int argc, char** argv )
         
         // operations for this iteration
         std::set<string> ops;
-        
-        // state
-        std::set<string> state;
-        
         decode_solution( *(argv+4), state, ops, variable_dictionary_int_string );
         
-        
+        /* output for testing:
         std::set<string>::iterator it_1;
         for( it_1 = ops.begin(); it_1 != ops.end(); ++it_1 )
         {
@@ -304,14 +314,23 @@ int main( int argc, char** argv )
         {
             cout << *it_2 << endl;
         }
+        */
         
-        // 4. add operations to priority queue
-    
-        // 4. write new state to end of file
-    
         
+        // 4. add operations to set
+        collect_operations_from_solution( operations, ops, &number_of_operations );
+        
+            
+        // 5. write new state to end of file
+        std::set<string> new_state;
+        calculate_new_state( state, new_state, variable_dictionary_string_int );
+        
+        modify_cnf_file( cnf_file, new_state );
+        
+        
+        return 0; // delete this after testing
     }
     
         
-    
+    return 0;
 }
