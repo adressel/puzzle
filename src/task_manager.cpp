@@ -228,7 +228,14 @@ void encode_initial_state( int _11, int _12, int _13, int _14,
 
 bool final_state_reached( std::set<string> state )
 {
-    return false;
+    bool result = true;
+    
+    for( int i = 1; i <= 16; i++ )
+    {
+        result = result && ( state.find( "TP( position:" + boost::lexical_cast<string>( i ) + " step:11 tile:" + boost::lexical_cast<string>( i ) + " )" ) != state.end() );
+    }
+    
+    return result;
 }
 
 
@@ -267,6 +274,8 @@ int main( int argc, char** argv )
             
                           variable_dictionary_string_int,
                           cnf_file );
+    
+    int test = 0;
     
     // while final state is not reached:
     while( !final_state_reached( state ) )
@@ -332,7 +341,10 @@ int main( int argc, char** argv )
         modify_cnf_file( cnf_file, new_state );
         
         
-        return 0; // delete this after testing
+        test++;
+        if( test == 8 ) {
+            return 0; // deleted this after testing
+        }
     }
     
         
