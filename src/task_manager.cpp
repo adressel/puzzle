@@ -9,6 +9,9 @@
 #include <map>
 #include <set>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -257,10 +260,10 @@ int main( int argc, char** argv )
     std::set<string> state;
     
     // 1. write initial state to end of file
-    encode_initial_state( 1,  2,  3,  4,
-                          5,  6,  7,  8,
-                          9,  10, 11, 12,
-                          13, 14, 15, 16,
+    encode_initial_state( 11,  6, 16, 8,
+                          15, 4,  12, 7,
+                          5,  9,  3,  2,
+                          1,  14, 10, 13,
             
                           variable_dictionary_string_int,
                           cnf_file );
