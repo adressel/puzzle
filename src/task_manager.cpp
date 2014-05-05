@@ -95,7 +95,7 @@ void modify_cnf_file( string file_name, std::set<string> state )
         content.push_back( line );
     }
     
-    while( in.good() && ( number_of_clauses-256 ) > 0 ) 
+    while( in.good() && ( number_of_clauses-16 ) > 0 ) 
     {
         getline( in, line );
         content.push_back( line );
