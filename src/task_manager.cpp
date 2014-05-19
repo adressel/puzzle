@@ -100,13 +100,13 @@ void modify_cnf_file( string file_name, std::set<string> state, std::set<string>
         {
             // get number of clauses during first iteration, then overwrite number 
             // of clauses in cnf file.
+            int pos = line.find_last_of( ' ' );
             if( number_of_clauses == 0 )
             {
-                int pos = line.find_last_of( ' ' );
                 number_of_clauses = atoi( line.substr( pos+1, line.size()-pos-1).c_str() );
-                
-                line.replace( pos+1, line.size()-pos-1, boost::lexical_cast<string>( number_of_clauses+state.size()+objective.size() ) );
             }
+            line.replace( pos+1, line.size()-pos-1, boost::lexical_cast<string>( number_of_clauses+state.size()+objective.size() ) );
+            
             num_clauses_local = number_of_clauses;
         }
         
