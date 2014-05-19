@@ -772,11 +772,32 @@ public class Fifteenpuzzle
     }
     
     
-    private void createHelperVarsInDictionary()
+    private Set<Rule> disambiguateHelperVariables()
     {
+        Set<Rule> rules = new HashSet<Rule>();
+        
         for( Integer step : step_values ) {
-            VariableDictionary.getInstance().getSymbolForVariable( "helper( index:" + step + " )" );
+            
+            Set<Relation> conditions = new HashSet<Relation>();
+            
+            Set<Constant> constants1 = new HashSet<Constant>();
+            constants1.add( new Constant<Integer>( "index", step ) );
+            conditions.add( new Relation( "helper", true, constants1 ) );
+            
+            for( Integer s : step_values ) {
+                if( s != step ) {
+                    Set<Relation> outcomes = new HashSet<Relation>();
+
+                    Set<Constant> constants2 = new HashSet<Constant>();
+                    constants2.add( new Constant<Integer>( "helper", s ) );
+                    outcomes.add( new Relation( "helper", false, constants2 ) );
+                    rules.add( new Rule( conditions, outcomes ) );
+                }
+            }
         }
+        
+        
+        return rules;
     }
     
     
@@ -829,7 +850,7 @@ public class Fifteenpuzzle
         grounded_instances.addAll( puzzle.createRule9() );
         
         
-        puzzle.createHelperVarsInDictionary();
+        puzzle.disambiguateHelperVariables();
                 
         Rule.writeGroundedInstancesToFile( grounded_instances, args[0] + ".enc");
         
