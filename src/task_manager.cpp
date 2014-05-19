@@ -153,11 +153,8 @@ void calculate_new_state( std::set<string> &outcome_state_as_string, std::set<st
         string tile_position = *it;
         int pos = tile_position.find( "step:" );
         
-        if( tile_position.substr( pos+5, 2 ).compare( "11" ) == 0 )
-        {
-            tile_position.replace( pos+5, 2, "1");
-            input_state_as_int.insert( boost::lexical_cast<string>( dictionary[tile_position] ) );
-        }
+        tile_position.replace( pos+5, 2, "1");
+        input_state_as_int.insert( boost::lexical_cast<string>( dictionary[tile_position] ) );
     }
 }
 
@@ -425,8 +422,8 @@ int main( int argc, char** argv )
    
      
         test++;
-        if( test == 1 ) {
-            return 0; // deleted this after testing
+        if( test == 5 ) {
+            return 0; // delete this after testing
         }
     }
 
