@@ -196,7 +196,21 @@ void decode_solution( string file_name, std::set<string> &outcome_state, std::se
         std::vector<string> tokens;
         split( tokens, line, boost::is_any_of( " " ) );
 
+        string step = "";
         std::vector<string>::iterator it;
+        for( it = tokens.begin(); it != tokens.end(); ++it )
+        {
+            if( (*it).find( "-" ) == string::npos )
+            {
+                string variable = dictionary[atoi( (*it).c_str() )];
+                if( variable.substr( 0, 6 ).compare( "helper" ) == 0 ) 
+                {
+                    step = variable.substr( 14, variable.find( " )")-14 );
+                    break;
+                }
+            }
+        }
+            
         for( it = tokens.begin(); it != tokens.end(); ++it )
         {
             if( (*it).find( "-" ) == string::npos )
@@ -208,7 +222,7 @@ void decode_solution( string file_name, std::set<string> &outcome_state, std::se
 
                 } else if( variable.substr( 0,2 ).compare( "TP" ) == 0 )
                 {
-                    if( variable.find( "step:11" ) != string::npos )
+                    if( variable.find( "step:" + step ) != string::npos )
                     {
                         outcome_state.insert( variable );
                     }
