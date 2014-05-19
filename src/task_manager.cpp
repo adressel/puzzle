@@ -68,7 +68,7 @@ void collect_operations_from_solution( std::set<string> &all_operations, std::se
 }
 
 
-void modify_cnf_file( string file_name, std::set<string> state )
+void modify_cnf_file( string file_name, std::set<string> state, std::set<string> objective, int &number_of_clauses )
 {
     ifstream in( file_name.c_str() );
     
@@ -82,24 +82,32 @@ void modify_cnf_file( string file_name, std::set<string> state )
     
     string line;
     
-    int number_of_clauses = 0;
-    while( in.good() && number_of_clauses == 0 )
+    int num_clauses_local = 0;
+    while( in.good() && num_clauses_local == 0 )
     {
         getline( in, line );
         if( line.find( "p cnf " ) != string::npos )
         {
-            int pos = line.find_last_of( ' ' );
-            number_of_clauses = atoi( line.substr( pos+1, line.size()-pos-1).c_str() );
+            // get number of clauses during first iteration, then overwrite number 
+            // of clauses in cnf file.
+            if( number_of_clauses == 0 )
+            {
+                int pos = line.find_last_of( ' ' );
+                number_of_clauses = atoi( line.substr( pos+1, line.size()-pos-1).c_str() );
+                
+                line.replace( pos+1, line.size()-pos-1, boost::lexical_cast<string>( number_of_clauses+state.size()+objective.size() ) );
+            }
+            num_clauses_local = number_of_clauses;
         }
         
         content.push_back( line );
     }
     
-    while( in.good() && ( number_of_clauses-16 ) > 0 ) 
+    while( in.good() && ( num_clauses_local ) > 0 ) 
     {
         getline( in, line );
         content.push_back( line );
-        number_of_clauses -= 1;        
+        num_clauses_local -= 1;        
     }
     in.close();
     
@@ -111,10 +119,16 @@ void modify_cnf_file( string file_name, std::set<string> state )
         out << *it_vec << "\n";
     }
     
-    std::set<string>::iterator it;
-    for( it = state.begin(); it != state.end(); ++it )
+    std::set<string>::iterator it_state;
+    for( it_state = state.begin(); it_state != state.end(); ++it_state )
     {
-        out << *it << " 0\n";
+        out << *it_state << " 0\n";
+    }
+    
+    std::set<string>::iterator it_objective;
+    for( it_objective = objective.begin(); it_objective != objective.end(); ++it_objective )
+    {
+        out << *it_objective << " 0\n";
     }
     
     out.close();
@@ -197,32 +211,45 @@ void decode_solution( string file_name, std::set<string> &outcome_state, std::se
 }
 
 
-void encode_initial_state( int _11, int _12, int _13, int _14,
-                           int _21, int _22, int _23, int _24,
-                           int _31, int _32, int _33, int _34,
-                           int _41, int _42, int _43, int _44,
-                           std::map<string, int> &dictionary,
-                           string cnf_file_name )
-{
-    std::set<string> state;
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:1 step:1 tile:" + boost::lexical_cast<string>( _11 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:2 step:1 tile:" + boost::lexical_cast<string>( _12 ) + " )"] ) ) ;
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:3 step:1 tile:" + boost::lexical_cast<string>( _13 ) + " )"] ) ) ;
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:4 step:1 tile:" + boost::lexical_cast<string>( _14 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:5 step:1 tile:" + boost::lexical_cast<string>( _21 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:6 step:1 tile:" + boost::lexical_cast<string>( _22 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:7 step:1 tile:" + boost::lexical_cast<string>( _23 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:8 step:1 tile:" + boost::lexical_cast<string>( _24 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:9 step:1 tile:" + boost::lexical_cast<string>( _31 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:10 step:1 tile:" + boost::lexical_cast<string>( _32 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:11 step:1 tile:" + boost::lexical_cast<string>( _33 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:12 step:1 tile:" + boost::lexical_cast<string>( _34 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:13 step:1 tile:" + boost::lexical_cast<string>( _41 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:14 step:1 tile:" + boost::lexical_cast<string>( _42 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:15 step:1 tile:" + boost::lexical_cast<string>( _43 ) + " )"] ) );
-    state.insert( boost::lexical_cast<string>( dictionary["TP( position:16 step:1 tile:" + boost::lexical_cast<string>( _44 ) + " )"] ) );
+void encode_objective( std::set<string> state, int steps, int next_tile, int distance, std::set<string> &objective )
+{    
+    std::set<string> tiles = find_previous_tiles( next_tile );
     
-    modify_cnf_file( cnf_file_name, state );
+    
+    string helper_variables = "";
+    for( int step = 1; step <= steps; step++ )
+    {
+        // helper variables:
+        if( step != 1 )
+        {
+            helper_variables += " ";
+        }
+        
+        helper_variables += boost::lexcial_cast<string>( dictionary["helper_" + boost::lexical_cast<string>( step )] );
+        
+        
+        // previous tiles:
+        std::set<string>::iterator it;
+        for( it = tiles.begin(); it != tiles.end(); ++it )
+        {
+            string clause = boost::lexical_cast<string>( dictionary["DIST( distance:0 step:" + boost::lexical_cast<string>( step ) + " tile:" + *it + " )"] );
+            clause += " -";
+            clause += boost::lexcial_cast<string>( dictionary["helper_" + boost::lexical_cast<string>( step )] );
+            
+            objective.insert( clause );
+        }
+        
+        // next tile:
+        string clause = boost::lexical_cast<string>( dictionary["DIST( distance:" + boost::lexical_cast<string>( distance-1 ) 
+                + " step:" + boost::lexical_cast<string>( step ) + " tile:" + boost::lexical_cast<string>( next_tile ) + " )"] );
+        clause += " -";
+        clause += boost::lexcial_cast<string>( dictionary["helper_" + boost::lexical_cast<string>( step )] );
+        
+        objective.insert( clause );
+        
+    }
+    
+    objective.insert( helper_variables );
 }
 
 
@@ -263,8 +290,20 @@ int main( int argc, char** argv )
     int number_of_operations = 0;
 
 
+    // next_tile, distance, number_of_clauses
+    int next_tile = 0;
+    int distance = -1;
+    int number_of_clauses = 0;
+    
+    
+    // solved tiles:
+    std::set<string> previous_tiles;
+    
     // state
     std::set<string> state;
+    
+    // objective
+    std::set<string> objective;
     
     // 1. write initial state to end of file
     encode_initial_state( 11,  6, 16, 8,
@@ -273,14 +312,17 @@ int main( int argc, char** argv )
                           1,  14, 10, 13,
             
                           variable_dictionary_string_int,
-                          cnf_file );
+                          cnf_file,
+                          next_tile,
+                          distance,
+                          previous_tiles,
+                          number_of_clauses );
     
     int test = 0;
     
     // while final state is not reached:
     while( !final_state_reached( state ) )
     {        
-        state.clear();
         
         // 2. run sat solver
         
@@ -307,7 +349,15 @@ int main( int argc, char** argv )
   
         waitpid( pid, NULL, 0 );
         
+        distance--;
         
+        if( distance == 0 )
+        {
+            find_next_tile( next_tile, distance, previous_tiles, state, variable_dictionary_int_string );
+        }
+        
+        state.clear();
+        objective.clear();
             
         // 3. decode solution
         
@@ -333,12 +383,14 @@ int main( int argc, char** argv )
         // 4. add operations to set
         collect_operations_from_solution( operations, ops, number_of_operations );
         
+        // 5. calculate new objective
+        encode_objective( state, 11, next_tile, distance, objective );
             
-        // 5. write new state to end of file
+        // 5. write new state and new objective to end of file
         std::set<string> new_state;
         calculate_new_state( state, new_state, variable_dictionary_string_int );
         
-        modify_cnf_file( cnf_file, new_state );
+        modify_cnf_file( cnf_file, new_state, objective, number_of_clauses );
         
         
         test++;
@@ -349,4 +401,342 @@ int main( int argc, char** argv )
     
         
     return 0;
+}
+
+
+
+
+
+
+
+
+
+
+// ugly stuff:
+
+
+void find_next_tile( int &next_tile, int &distance, std::set<string> &previous_tiles, std::set<string> &state, std::map<int, string> dictionary )
+{
+    previous_tiles.insert( next_tile );
+    
+    if( next_tile == 1 || next_tile == 2 || next_tile == 3 || next_tile == 4 || next_tile == 6 || next_tile == 7
+            || next_tile == 10 || next_tile == 11 || next_tile == 14 || next_tile == 15 )
+    {
+        next_tile += 1;
+    } else if( next_tile == 5 )
+    {
+        next_tile = 9;
+    } else if( next_tile == 9 )
+    {
+        next_tile = 13;
+    } else if( next_tile == 13 )
+    {
+        next_tile = 6;
+    } else if( next_tile == 8 || next_tile == 12 ) 
+    {
+        next_tile += 2;
+    }
+    
+    calculate_distance( state, next_tile, dictionary, distance );
+}
+
+
+void calculate_distance( std::set<string> state, int tile, std::map<int, string> dictionary, int &distance )
+{
+    int position = 0;
+    
+    std::set<string>::iterator it;
+    for( it = state.begin(); it != state.end(); ++it )
+    {
+        if( dictionary[*it].find( "tile:" + tile + " " ) != string::npos )
+        {
+            int pos1 = dictionary[*it].find( "position:" );
+            int pos2 = dictionary[*it].find( " step:" );
+
+            position = atoi( dictionary[*it].substr( pos1+9, pos2-pos1-9) );
+        }
+    }
+    
+    if( position == 0 ) 
+    {
+        cout << "error: position cannot be zero." << endl;
+        exit( 0 );
+    }
+
+    
+    if( tile < 5 ) 
+    {
+        if( position < 5 ) 
+        {
+            distance = 0;
+        } else if( position < 9 && position > 4) 
+        {
+            distance = 1;
+        } else if( position < 13 && position > 8) 
+        {
+            distance = 2;
+        } else 
+        {
+            distance = 3;
+        }
+                        
+    } else if( tile > 4 && tile < 9 ) 
+    {
+        if( position < 5 ) 
+        {
+            distance = 1;
+        } else if( position < 9 && position > 4 ) 
+        {
+            distance = 0;
+        } else if( position < 13 && position > 8 ) 
+        {
+            distance = 1;
+        } else {
+            distance = 2;
+        }
+                        
+    } else if( tile > 8 && tile < 13 ) 
+    {
+        if( position < 5 ) 
+        {
+            distance = 2;
+        } else if( position < 9 && position > 4 ) 
+        {
+            distance = 1;
+        } else if( position < 13 && position > 8 ) 
+        {
+            distance = 0;
+        } else 
+        {
+            distance = 1;
+        }
+                        
+    } else {
+        if( position < 5 ) {
+            distance = 3;
+        } else if( position < 9 && position > 4 ) 
+        {
+            distance = 2;
+        } else if( position < 13 && position > 8 ) 
+        {
+            distance = 1;
+        } else {
+            distance = 0;
+        }
+                        
+    }
+                    
+    if( tile%4 == 1 ) 
+    {
+        if( position%4 == 1 ) 
+        {
+            distance += 0;
+        } else if( position%4 == 2 ) 
+        {
+            distance += 1;
+        } else if( position%4 == 3 ) 
+        {
+            distance += 2;
+        } else 
+        {
+            distance += 3;
+        }
+                        
+    } else if( tile%4 == 2 ) 
+    {
+        if( position%4 == 1 ) 
+        {
+            distance += 1;
+        } else if( position%4 == 2 ) 
+        {
+            distance += 0;
+        } else if( position%4 == 3 ) 
+        {
+            distance += 1;
+        } else 
+        {
+            distance += 2;
+        }
+                        
+    } else if( tile%4 == 3 ) 
+    {
+        if( position%4 == 1 ) 
+        {
+            distance += 2;
+        } else if( position%4 == 2 ) 
+        {
+            distance += 1;
+        } else if( position%4 == 3 ) 
+        {
+            distance += 0;
+        } else 
+        {
+            distance += 1;
+        }
+                        
+    } else 
+    {
+        if( position%4 == 1 ) 
+        {
+            distance += 3;
+        } else if( position%4 == 2 ) 
+        {
+            distance += 2;
+        } else if( position%4 == 3 ) 
+        {
+            distance += 1;
+        } else 
+        {
+            distance += 0;
+        }
+    }
+
+}
+
+
+void encode_initial_state( int _11, int _12, int _13, int _14,
+                           int _21, int _22, int _23, int _24,
+                           int _31, int _32, int _33, int _34,
+                           int _41, int _42, int _43, int _44,
+                           std::map<string, int> &dictionary,
+                           string cnf_file_name,
+                           int &next_tile,
+                           int &distance,
+                           std::set<string> &previous_tiles
+                           int &number_of_clauses )
+{
+    // write state
+    std::set<string> state;
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:1 step:1 tile:" + boost::lexical_cast<string>( _11 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:2 step:1 tile:" + boost::lexical_cast<string>( _12 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:3 step:1 tile:" + boost::lexical_cast<string>( _13 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:4 step:1 tile:" + boost::lexical_cast<string>( _14 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:5 step:1 tile:" + boost::lexical_cast<string>( _21 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:6 step:1 tile:" + boost::lexical_cast<string>( _22 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:7 step:1 tile:" + boost::lexical_cast<string>( _23 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:8 step:1 tile:" + boost::lexical_cast<string>( _24 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:9 step:1 tile:" + boost::lexical_cast<string>( _31 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:10 step:1 tile:" + boost::lexical_cast<string>( _32 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:11 step:1 tile:" + boost::lexical_cast<string>( _33 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:12 step:1 tile:" + boost::lexical_cast<string>( _34 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:13 step:1 tile:" + boost::lexical_cast<string>( _41 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:14 step:1 tile:" + boost::lexical_cast<string>( _42 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:15 step:1 tile:" + boost::lexical_cast<string>( _43 ) + " )"] ) );
+    state.insert( boost::lexical_cast<string>( dictionary["TP( position:16 step:1 tile:" + boost::lexical_cast<string>( _44 ) + " )"] ) );
+    
+    // @Todo: objective
+    
+    modify_cnf_file( cnf_file_name, state, objective, number_of_clauses );
+    
+    // set next_tile
+    if( _11 != 1 )
+    {
+        next_tile = 1;
+    } else {
+        previous_tiles.insert( "1" );
+        if( _12 != 2 ) 
+        {
+                next_tile = 2;
+        } else 
+        {
+            previous_tiles.insert( "2" );
+            if( _13 != 3 )
+            {
+                next_tile = 3;
+            } else
+            {
+                previous_tiles.insert( "3" );
+                if( _14 != 4 )
+                {
+                    next_tile = 4;
+                } else 
+                {
+                    previous_tiles.insert( "4" );
+                    if( _21 != 5 )
+                    {
+                        next_tile = 5;
+                    } else
+                    {
+                        previous_tiles.insert( "5" );
+                        if( _31 != 9 )
+                        {
+                            next_tile = 9;
+                        } else
+                        {
+                            previous_tiles.insert( "9" );
+                            if( _41 != 13 )
+                            {
+                                next_tile = 13;
+                            } else
+                            {
+                                previous_tiles.insert( "13" );
+                                if( _22 != 6 )
+                                {
+                                    next_tile = 6;
+                                } else
+                                {
+                                    previous_tiles.insert( "6" );
+                                    if( _23 != 7 )
+                                    {
+                                        next_tile = 7;
+                                    } else
+                                    {    
+                                        previous_tiles.insert( "7" );
+                                        if( _24 != 8 )
+                                        {
+                                            next_tile = 8;
+                                        } else
+                                        {
+                                            previous_tiles.insert( "8" );
+                                            if( _32 != 10 )
+                                            {
+                                                next_tile = 10;
+                                            } else
+                                            {
+                                                previous_tiles.insert( "10" );
+                                                if( _33 != 11 )
+                                                {
+                                                    next_tile = 11;
+                                                } else
+                                                {
+                                                    previous_tiles.insert( "11" );
+                                                    if( _34 != 12 )
+                                                    {
+                                                        next_tile = 12;
+                                                    } else
+                                                    {
+                                                        previous_tiles.insert( "12" );
+                                                        if( _42 != 14 )
+                                                        {
+                                                            next_tile = 14;
+                                                        } else
+                                                        {
+                                                            previous_tiles.insert( "14" );
+                                                            if( _43 != 15 )
+                                                            {
+                                                                next_tile = 15;
+                                                            } else 
+                                                            {
+                                                                previous_tiles.insert( "15" );
+                                                                next_tile = 16;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    // distance
+    calculate_distance( std::set<string> state, int tile, int &distance );
+    
 }
