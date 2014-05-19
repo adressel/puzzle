@@ -337,6 +337,9 @@ int main( int argc, char** argv )
     while( !final_state_reached( state ) )
     {        
         
+        state.clear();
+        objective.clear();
+        
         // 2. run sat solver
         
         char *solver_args[4];
@@ -362,21 +365,19 @@ int main( int argc, char** argv )
   
         waitpid( pid, NULL, 0 );
         
-        distance--;
-        
-        if( distance == 0 )
-        {
-            find_next_tile( next_tile, distance, previous_tiles, state, variable_dictionary_int_string );
-        }
-        
-        state.clear();
-        objective.clear();
             
         // 3. decode solution
         
         // operations for this iteration
         std::set<string> ops;
         decode_solution( *(argv+4), state, ops, variable_dictionary_int_string );
+        
+        distance--;
+        if( distance == 0 )
+        {
+            find_next_tile( next_tile, distance, previous_tiles, state, variable_dictionary_int_string );
+        }
+        
         
         // output for testing:
         std::set<string>::iterator it_1;
