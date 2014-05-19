@@ -1,6 +1,7 @@
 // Andreas Dressel
 
 #include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -8,6 +9,8 @@
 #include <queue>
 #include <map>
 #include <set>
+
+#include <time.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -273,7 +276,11 @@ int main( int argc, char** argv )
         cout << "Usage: ./task_manager <cnf_file> <dictionary_file> <solver_binary> <solver_output_file>" << endl;
         exit( 0 );
     }
+   
+    clock_t cl_1, cl_2;
+    cl_1 = clock();
     
+
     string cnf_file = *(argv+1);
     string dictionary_file = *(argv+2);
     string solver_binary = *(argv+3);
@@ -365,7 +372,7 @@ int main( int argc, char** argv )
         std::set<string> ops;
         decode_solution( *(argv+4), state, ops, variable_dictionary_int_string );
         
-        /* output for testing:
+        // output for testing:
         std::set<string>::iterator it_1;
         for( it_1 = ops.begin(); it_1 != ops.end(); ++it_1 )
         {
@@ -377,7 +384,8 @@ int main( int argc, char** argv )
         {
             cout << *it_2 << endl;
         }
-        */
+        
+        cout << endl << endl;
         
         
         // 4. add operations to set
@@ -391,15 +399,34 @@ int main( int argc, char** argv )
         calculate_new_state( state, new_state, variable_dictionary_string_int );
         
         modify_cnf_file( cnf_file, new_state, objective, number_of_clauses );
+        remove( *(argv+4) );        
         
-        
+   
+     
         test++;
-        if( test == 8 ) {
+        if( test == 150 ) {
             return 0; // deleted this after testing
         }
     }
+
+    cl_2 = clock();
+
+    cout << "Operations: " << endl << endl;
     
-        
+    for( std::set<string>::iterator it = operations.begin(); it != operations.end(); ++it )
+    {
+        cout << *it << endl;
+    }
+
+    cout << "\nResult after " << operations.size() << " steps:" << endl << endl;
+
+    for( std::set<string>::iterator it = state.begin(); it != state.end(); ++it )
+    {
+        cout << *it << endl;
+    }
+
+    cout << "\nRuntime: " << cl_2 - cl_1 << "ms" << endl;
+    
     return 0;
 }
 
