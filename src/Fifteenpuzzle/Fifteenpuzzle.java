@@ -81,7 +81,15 @@ public class Fifteenpuzzle
         
         return new Relation( "DIST", sign, constants );
     }
-            
+    
+    private Relation createHelperVarRelation( int index, boolean sign )
+    {
+        Set<Constant> constants = new HashSet<Constant>();
+        constants.add( new Constant<Integer>( "index", index ) );
+        
+        return new Relation( "helper", sign, constants );
+    }
+    
             
     // Rule #1:
     private Set<Rule> createRule1()
@@ -551,7 +559,283 @@ public class Fifteenpuzzle
     }
     
     
-    private Set<Rule> encodeInitialState()
+    private int getMaxDistanceForTile( int tile )
+    {
+        int max_distance;
+        if( tile == 1 || tile == 4 || tile == 13 || tile == 16 ) {
+            max_distance = 6;
+        } else if( tile == 2 || tile == 3 || tile == 5 || tile == 8 || tile == 9 || tile == 12 
+                || tile == 14 || tile == 15 ) {
+            max_distance = 5;
+        } else {
+            max_distance = 4;
+        }
+        return max_distance;
+    }
+    
+    
+    // Rule #9
+    // prevents that the distance for a tile gets set to some low number in the
+    // case that no operations were executed in the previous step. Instead, the
+    // distance for every tile gets set to its maximum (-> no possible solution)
+    private Set<Rule> createRule9()
+    {
+        Set<Rule> rule9 = new HashSet<Rule>();
+        
+        for( Integer step : step_values ) {
+            
+            if( step == step_values.length ) {
+                continue;
+            }
+            
+            for( Integer tile : tile_values ) {
+
+                for( int distance = 0; distance <= getMaxDistanceForTile( tile ); distance++ ) {
+                    
+                    Set<Relation> conditions = new HashSet<Relation>();
+                    for( Operation operation : Operation.values() ) {
+                        conditions.add( createConstantEORelation( operation, step, false ) );
+                    }
+                    
+                    Set<Relation> outcomes = new HashSet<Relation>();
+                    outcomes.add( createConstantDISTRelation( tile, distance, step + 1, distance == getMaxDistanceForTile( tile ) ) );
+                    rule9.add( new Rule( conditions, outcomes ) );
+                }
+            }
+        }
+        
+        return rule9;
+    }
+            
+    
+    // Task decomposition
+    
+    private Set<Rule> createDistanceVariables()
+    {
+        Set<Rule> rule9 = new HashSet<Rule>();
+        
+        for( Integer step : step_values ) {
+            
+            
+            for( int tile : this.tile_values ) {
+                for( int position : this.position_values ) {
+                    
+                    Set<Relation> conditions = new HashSet<Relation>();
+                    conditions.add( createConstantTPRelation( tile, position, step, true ) );
+                    
+                    Set<Relation> outcomes = new HashSet<Relation>();
+                    
+                    // Manhattan distance:
+                    int distance;
+                    if( tile < 5 ) {
+                        if( position < 5 ) {
+                            distance = 0;
+                        } else if( position < 9 && position > 4) {
+                            distance = 1;
+                        } else if( position < 13 && position > 8) {
+                            distance = 2;
+                        } else {
+                            distance = 3;
+                        }
+                        
+                    } else if( tile > 4 && tile < 9 ) {
+                        if( position < 5 ) {
+                            distance = 1;
+                        } else if( position < 9 && position > 4 ) {
+                            distance = 0;
+                        } else if( position < 13 && position > 8 ) {
+                            distance = 1;
+                        } else {
+                            distance = 2;
+                        }
+                        
+                    } else if( tile > 8 && tile < 13 ) {
+                        if( position < 5 ) {
+                            distance = 2;
+                        } else if( position < 9 && position > 4 ) {
+                            distance = 1;
+                        } else if( position < 13 && position > 8 ) {
+                            distance = 0;
+                        } else {
+                            distance = 1;
+                        }
+                        
+                    } else {
+                        if( position < 5 ) {
+                            distance = 3;
+                        } else if( position < 9 && position > 4 ) {
+                            distance = 2;
+                        } else if( position < 13 && position > 8 ) {
+                            distance = 1;
+                        } else {
+                            distance = 0;
+                        }
+                        
+                    }
+                    
+                    if( tile%4 == 1 ) {
+                        if( position%4 == 1 ) {
+                            distance += 0;
+                        } else if( position%4 == 2 ) {
+                            distance += 1;
+                        } else if( position%4 == 3 ) {
+                            distance += 2;
+                        } else {
+                            distance += 3;
+                        }
+                        
+                    } else if( tile%4 == 2 ) {
+                        if( position%4 == 1 ) {
+                            distance += 1;
+                        } else if( position%4 == 2 ) {
+                            distance += 0;
+                        } else if( position%4 == 3 ) {
+                            distance += 1;
+                        } else {
+                            distance += 2;
+                        }
+                        
+                    } else if( tile%4 == 3 ) {
+                        if( position%4 == 1 ) {
+                            distance += 2;
+                        } else if( position%4 == 2 ) {
+                            distance += 1;
+                        } else if( position%4 == 3 ) {
+                            distance += 0;
+                        } else {
+                            distance += 1;
+                        }
+                        
+                    } else {
+                        if( position%4 == 1 ) {
+                            distance += 3;
+                        } else if( position%4 == 2 ) {
+                            distance += 2;
+                        } else if( position%4 == 3 ) {
+                            distance += 1;
+                        } else {
+                            distance += 0;
+                        }
+                        
+                    }
+                    
+                    outcomes.add( createConstantDISTRelation( tile, distance, step, true ) );
+                    rule9.add( new Rule( conditions, outcomes ) );
+                }
+            }
+        }
+        
+        return rule9;
+    }
+    
+    // DIST( tile, distance_1, step ) => ~DIST( tile, distance_2, step )
+    // for all distance_1 != distance_2
+    private Set<Rule> disambiguateDistancesRule()
+    {
+        Set<Rule> rules = new HashSet<Rule>();
+        
+        for( Integer step : step_values ) {
+            
+                    
+            for( Integer tile : tile_values ) {
+                
+                int max_distance;
+                if( tile == 1 || tile == 4 || tile == 13 || tile == 16 ) {
+                    max_distance = 6;
+                } else if( tile == 2 || tile == 3 || tile == 5 || tile == 8 || tile == 9 || tile == 12 
+                        || tile == 14 || tile == 15 ) {
+                    max_distance = 5;
+                } else {
+                    max_distance = 4;
+                }
+                
+                for( int distance = 0; distance <= max_distance; distance++ ) {
+                    Set<Relation> conditions = new HashSet<Relation>();
+                    conditions.add( createConstantDISTRelation( tile, distance, step, true ) );
+                    
+                    for( int dist = 0; dist <= max_distance; dist++ ) {
+                        
+                        if( distance != dist ) {
+                            
+                            Set<Relation> outcomes = new HashSet<Relation>();
+                            outcomes.add( createConstantDISTRelation( tile, dist, step, false ) );
+                            
+                            rules.add( new Rule( conditions, outcomes ) );
+                            
+                        }
+                    }
+                }
+            } 
+        }
+        
+        return rules;
+    }
+    
+    
+    public static void main( String[] args )
+    {
+        Fifteenpuzzle puzzle = new Fifteenpuzzle();
+        
+        long time = System.currentTimeMillis();
+        
+        Set<Rule> grounded_instances = new HashSet<Rule>();
+        
+        // Rule #1
+        Set<Rule> rule1 = puzzle.createRule1();                
+        for( Rule rule : rule1 ) {
+            grounded_instances.addAll( rule.getGroundedInstances() );
+        }
+        
+        // Rule #2
+        Set<Rule> rule2 = puzzle.createRule2();
+        for( Rule rule : rule2 ) {
+            grounded_instances.addAll( rule.getGroundedInstances() );
+        }
+        
+        // Rule #3
+        grounded_instances.addAll( puzzle.createRule3() );
+        
+        // Rule #4
+        Set<Rule> rule4 = puzzle.createRule4();
+        for( Rule rule : rule4 ) {
+            grounded_instances.addAll( rule.getGroundedInstances() );
+        }
+        
+        // Rule #5
+        // grounded_instances.addAll( puzzle.createRule5() ); // are already grounded
+        
+        // Rule #6
+        grounded_instances.addAll( puzzle.createRule6_1() );
+        grounded_instances.addAll( puzzle.createRule6_2() );
+        
+        // Rule #7
+        grounded_instances.addAll( puzzle.createRule7() );
+        
+        // Rule #8
+        grounded_instances.addAll( puzzle.createRule8() );
+        
+        
+        // task decomposition
+        grounded_instances.addAll( puzzle.createDistanceVariables() );
+        grounded_instances.addAll( puzzle.disambiguateDistancesRule() );
+        grounded_instances.addAll( puzzle.createRule9() );
+        
+                
+        Rule.writeGroundedInstancesToFile( grounded_instances, args[0] + ".enc");
+        
+        System.out.println( "Time needed for rule 1 - 8: " + ( System.currentTimeMillis() - time ) );
+        System.out.println( "Variables in dictionary: " + VariableDictionary.getInstance().getVariableCount() );
+        
+        VariableDictionary.getInstance().writeToFile( args[0] + ".dict" );
+    }
+}
+
+
+
+/* BACKUP
+
+
+private Set<Rule> encodeInitialState()
     {
         Set<Rule> initial_state = new HashSet<Rule>();
         
@@ -589,145 +873,148 @@ public class Fifteenpuzzle
         
         return initial_state;
     }
-            
     
-    // Task decomposition
     
-    private Set<Rule> createDistanceVariables()
-    {
-        Set<Rule> rule9 = new HashSet<Rule>();
-        
-        // for( Integer step : step_values ) {
-        
-        for( int i = 0; i < 2; i++ ) {
-            
-            int step;
-            if( i == 0 ) {
-                step = 1;
-            } else {
-                step = this.step_values.length;
-            }
-            
-            
-            for( int tile : this.tile_values ) {
-                for( int position : this.position_values ) {
-                    
-                    Set<Relation> conditions = new HashSet<Relation>();
-                    conditions.add( createConstantTPRelation( tile, position, step, true ) );
-                    
-                    Set<Relation> outcomes = new HashSet<Relation>();
-                    
-                    // Manhattan distance:
-                    int distance;
-                    if( tile < 5 ) {
-                        if( position < 5 ) {
-                            distance = 0;
-                        } else if( position < 9 && position > 4) {
-                            distance = 1;
-                        } else if( position < 13 && position > 8) {
-                            distance = 2;
-                        } else {
-                            distance = 3;
-                        }
-                        
-                    } else if( tile < 9 ) {
-                        if( position < 5 ) {
-                            distance = 1;
-                        } else if( position < 9 && position > 4 ) {
-                            distance = 0;
-                        } else if( position < 13 && position > 8 ) {
-                            distance = 1;
-                        } else {
-                            distance = 2;
-                        }
-                        
-                    } else if( tile < 13 ) {
-                        if( position < 5 ) {
-                            distance = 2;
-                        } else if( position < 9 && position > 4 ) {
-                            distance = 1;
-                        } else if( position < 13 && position > 8 ) {
-                            distance = 0;
-                        } else {
-                            distance = 1;
-                        }
-                        
-                    } else {
-                        if( position < 5 ) {
-                            distance = 3;
-                        } else if( position < 9 && position > 4 ) {
-                            distance = 2;
-                        } else if( position < 13 && position > 8 ) {
-                            distance = 1;
-                        } else {
-                            distance = 0;
-                        }
-                        
-                    }
-                    
-                    distance += Math.abs( tile%4 - position%4 );
-                    
-                    outcomes.add( createConstantDISTRelation( tile, distance, step, true ) );
-                    rule9.add( new Rule( conditions, outcomes ) );
-                }
-            }
-        }
-        
-        return rule9;
-    }
-    
-    // DIST( tile, distance_1, step ) => ~DIST( tile, distance_2, step )
-    // for all distance_1 != distance_2
-    private Set<Rule> disambiguateDistancesRule()
+    private Set<Rule> distancesObjective()
     {
         Set<Rule> rules = new HashSet<Rule>();
         
-        //for( Integer step : step_values ) {
+        int helper_vars_counter = 1;
         
-        for( int i = 0; i < 2; i++ ) {
+        for( Integer tile : tile_values ) {
+            int max_distance = getMaxDistanceForTile( tile );
             
             
-            int step;
-            if( i == 0 ) {
-                step = 1;
-            } else {
-                step = step_values.length;
-            }
+            // Solve puzzle step by step:
+            // first tiles 1, 2, 3, 4; then 5, 9, 13; then 6, 7, 8; then 10, 11, 12, 14, 15, 16
             
-                    
-            for( Integer tile : tile_values ) {
+            // get solved positions
+            Set<Integer> first = new HashSet<Integer>();
+            first.add( 1 ); first.add( 2 ); first.add( 3 ); first.add( 4 );
+            
+            Set<Integer> second = new HashSet<Integer>();
+            second.add( 5 ); second.add( 9 ); second.add( 13 );
+            
+            Set<Integer> third = new HashSet<Integer>();
+            third.add( 6 ); third.add( 7 ); third.add( 8 );
                 
-                int max_distance;
-                if( tile == 1 || tile == 4 || tile == 13 || tile == 16 ) {
-                    max_distance = 6;
-                } else if( tile == 2 || tile == 3 || tile == 5 || tile == 8 || tile == 9 || tile == 12 
-                        || tile == 14 || tile == 15 ) {
-                    max_distance = 5;
-                } else {
-                    max_distance = 4;
+            Set<Integer> fourth = new HashSet<Integer>();
+            fourth.add( 10 ); fourth.add( 11 ); fourth.add( 12 ); fourth.add( 14 ); fourth.add( 15 ); fourth.add( 16 );
+                
+            Set<Integer> solved_positions = new HashSet<Integer>();
+            for( Integer tile2 : first ) {
+                if( tile2 < tile || !first.contains( tile ) ) {
+                            
+                    solved_positions.add( tile2 );
                 }
+            }
                 
-                for( int distance = 0; distance <= max_distance; distance++ ) {
-                    Set<Relation> conditions = new HashSet<Relation>();
-                    conditions.add( createConstantDISTRelation( tile, distance, step, true ) );
-                    
-                    for( int dist = 0; dist <= max_distance; dist++ ) {
-                        
-                        if( distance != dist ) {
+            if( !first.contains( tile ) ) {
+                for( Integer tile2 : second ) {
+                    if( tile2 < tile || !second.contains( tile ) ) {
                             
-                            Set<Relation> outcomes = new HashSet<Relation>();
-                            outcomes.add( createConstantDISTRelation( tile, dist, step, false ) );
-                            
-                            rules.add( new Rule( conditions, outcomes ) );
-                            
-                        }
+                        solved_positions.add( tile2 );
                     }
                 }
-            } 
+            }
+                
+            if( !second.contains( tile ) && !first.contains( tile ) ) {
+                for( Integer tile2 : third ) {
+                    if( tile2 < tile || !third.contains( tile ) ) {
+                            
+                        solved_positions.add( tile2 );
+                    }
+                }
+            }
+                
+                
+            // -----------------------------------------------------------------------------------
+            // These tiles (in set 'fourth') must in fact be optimized in one step -> change implementation
+            if( !third.contains( tile ) && !second.contains( tile ) && !first.contains( tile ) ) {
+                for( Integer tile2 : fourth ) {
+                    if( tile2 < tile || !fourth.contains( tile ) ) {
+                            
+                        solved_positions.add( tile2 );
+                    }
+                }
+            }
+            // -----------------------------------------------------------------------------------
+        
+            
+            // helper variables
+            Set<Relation> conditions_helper_vars = new HashSet<Relation>();
+
+            for( int distance = 1; distance <= max_distance; distance++ ) {
+                
+                Set<Relation> conditions_distances1 = new HashSet<Relation>();
+                conditions_distances1.add( createConstantDISTRelation( tile, distance, 1, false ) ); // tile, distance, step:1
+                conditions_distances1.add( createHelperVarRelation( helper_vars_counter, false ) );
+                rules.add( new Rule( conditions_distances1 ) );
+                
+                conditions_helper_vars.add( createHelperVarRelation( helper_vars_counter, true ) );
+                helper_vars_counter++;
+                
+                
+                // solved positions:
+                for( Integer solved_position : solved_positions ) {
+                    
+                    Set<Relation> conditions_distances2 = new HashSet<Relation>();
+                    conditions_distances2.add( createConstantDISTRelation( solved_position, 0, 1, false ) );
+                    conditions_distances2.add( createHelperVarRelation( helper_vars_counter, false ) );
+                    rules.add( new Rule( conditions_distances2 ) );
+                    
+                    conditions_helper_vars.add( createHelperVarRelation( helper_vars_counter, true ) );
+                    helper_vars_counter++;
+                    
+                    
+                }
+                
+                
+                
+                for( int step : step_values ) {
+                    
+                    if( step == 1 ) {
+                        continue;
+                    }
+                    
+                    // solved positions:
+                    for( Integer solved_position : solved_positions ) {
+            
+                        // get all possible positions for solved_position that are greater than 0...
+                        int max = getMaxDistanceForTile( solved_position );
+                            
+                        for( int d = 1; d <= max; d++ ) {
+                                
+                            Set<Relation> conditions_distances2 = new HashSet<Relation>();
+                            conditions_distances2.add( createConstantDISTRelation( solved_position, d, step, false ) );
+                            conditions_distances2.add( createHelperVarRelation( helper_vars_counter, false ) );
+                            rules.add( new Rule( conditions_distances2 ) );
+                                                           
+                        }
+                    }
+                    
+                    for( int dist = distance; dist <= max_distance; dist++ ) {
+                        
+                        // improve by min 1:
+                        Set<Relation> conditions_distances2 = new HashSet<Relation>();
+                        conditions_distances2.add( createConstantDISTRelation( tile, dist, step, false ) );
+                        conditions_distances2.add( createHelperVarRelation( helper_vars_counter, false ) );
+                        rules.add( new Rule( conditions_distances2 ) );
+                        
+                    }
+                    conditions_helper_vars.add( createHelperVarRelation( helper_vars_counter, true ) );
+                    helper_vars_counter++;
+                    
+                }
+            }
+            rules.add( new Rule( conditions_helper_vars ) );
         }
+        
         
         return rules;
     }
+    
+    
     
     private Set<Rule> distancesOption2()
     {
@@ -801,7 +1088,7 @@ public class Fifteenpuzzle
                 // -----------------------------------------------------------------------------------
                 // These tiles (in set 'fourth') must in fact be optimized in one step -> change implementation
                 if( !third.contains( tile ) && !second.contains( tile ) && !first.contains( tile ) ) {
-                    for(Integer tile2 : second ) {
+                    for(Integer tile2 : fourth ) {
                         if( tile2 < tile || !fourth.contains( tile ) ) {
                             
                             relaxed_positions.add( tile2 );
@@ -829,7 +1116,7 @@ public class Fifteenpuzzle
                 
                 
                 // by how much must the distance be reduced in n steps? -> x
-                int x = 1; // dependent on the current state...
+                int x = 0; // dependent on the current state...
                 
                 // all distances greater than distance - x are not allowed after n steps -> outcome -> rule
                 for( int dist = distance - x; dist <= max_distance; dist++ ) {
@@ -844,89 +1131,25 @@ public class Fifteenpuzzle
         
         return rules;
     }
-    
-    // ensure that an operation is executed at each step (by saying that tile 16 must be 
-    // on some position at step n
-    private Set<Rule> createRule9()
+
+
+// ensure that at least one operation is executed
+    private Set<Rule> createRule10()
     {
-        Set<Rule> rule9 = new HashSet<Rule>();
+        Set<Rule> rule10 = new HashSet<Rule>();
         
         Set<Relation> conditions = new HashSet<Relation>();
         
         for( Integer position : position_values ) {
             
-            conditions.add( createConstantTPRelation( tile_values.length, position, step_values.length, true ) );            
+            conditions.add( createConstantTPRelation( tile_values.length, position, 2, true ) );            
         }
         
-        rule9.add( new Rule( conditions ) );
+        rule10.add( new Rule( conditions ) );
         
-        return rule9;
+        return rule10;
     }
     
-    
-    
-    
-    public static void main( String[] args )
-    {
-        Fifteenpuzzle puzzle = new Fifteenpuzzle();
-        
-        long time = System.currentTimeMillis();
-        
-        Set<Rule> grounded_instances = new HashSet<Rule>();
-        
-        // Rule #1
-        Set<Rule> rule1 = puzzle.createRule1();                
-        for( Rule rule : rule1 ) {
-            grounded_instances.addAll( rule.getGroundedInstances() );
-        }
-        
-        // Rule #2
-        Set<Rule> rule2 = puzzle.createRule2();
-        for( Rule rule : rule2 ) {
-            grounded_instances.addAll( rule.getGroundedInstances() );
-        }
-        
-        // Rule #3
-        grounded_instances.addAll( puzzle.createRule3() );
-        
-        // Rule #4
-        Set<Rule> rule4 = puzzle.createRule4();
-        for( Rule rule : rule4 ) {
-            grounded_instances.addAll( rule.getGroundedInstances() );
-        }
-        
-        // Rule #5
-        // grounded_instances.addAll( puzzle.createRule5() ); // are already grounded
-        
-        // Rule #6
-        grounded_instances.addAll( puzzle.createRule6_1() );
-        grounded_instances.addAll( puzzle.createRule6_2() );
-        
-        // Rule #7
-        grounded_instances.addAll( puzzle.createRule7() );
-        
-        // Rule #8
-        grounded_instances.addAll( puzzle.createRule8() );
-        
-        
-        // task decomposition
-        grounded_instances.addAll( puzzle.createDistanceVariables() );
-        grounded_instances.addAll( puzzle.distancesOption2() );
-        grounded_instances.addAll( puzzle.disambiguateDistancesRule() );
-        grounded_instances.addAll( puzzle.createRule9() );
-        
-        
-        // Initial State
-        //grounded_instances.addAll( puzzle.encodeInitialState() );
-        // write state to end of file instead, for each iteration
-        
-        
-                
-        Rule.writeGroundedInstancesToFile( grounded_instances, args[0] + ".enc");
-        
-        System.out.println( "Time needed for rule 1 - 8: " + ( System.currentTimeMillis() - time ) );
-        System.out.println( "Variables in dictionary: " + VariableDictionary.getInstance().getVariableCount() );
-        
-        VariableDictionary.getInstance().writeToFile( args[0] + ".dict" );
-    }
-}
+
+
+*/
