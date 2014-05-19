@@ -153,8 +153,11 @@ void calculate_new_state( std::set<string> &outcome_state_as_string, std::set<st
         string tile_position = *it;
         int pos = tile_position.find( "step:" );
         
-        tile_position.replace( pos+5, 2, "1");
-        input_state_as_int.insert( boost::lexical_cast<string>( dictionary[tile_position] ) );
+        if( tile_position.substr( pos+5, 2 ).compare( "11" ) == 0 )
+        {
+            tile_position.replace( pos+5, 2, "1");
+            input_state_as_int.insert( boost::lexical_cast<string>( dictionary[tile_position] ) );
+        }
     }
 }
 
@@ -203,6 +206,7 @@ void decode_solution( string file_name, std::set<string> &outcome_state, std::se
                 if( variable.substr( 0, 6 ).compare( "helper" ) == 0 ) 
                 {
                     step = variable.substr( 14, variable.find( " )")-14 );
+                    cout << "step:" << step << endl;
                     break;
                 }
             }
@@ -219,7 +223,7 @@ void decode_solution( string file_name, std::set<string> &outcome_state, std::se
 
                 } else if( variable.substr( 0,2 ).compare( "TP" ) == 0 )
                 {
-                    if( variable.find( "step:" + step ) != string::npos )
+                    if( variable.find( "step:" + step + " " ) != string::npos )
                     {
                         outcome_state.insert( variable );
                     }
