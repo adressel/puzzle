@@ -772,6 +772,14 @@ public class Fifteenpuzzle
     }
     
     
+    private void createHelperVarsInDictionary()
+    {
+        for( Integer step : step_values ) {
+            VariableDictionary.getInstance().getSymbolForVariable( "helper( index:" + step + " )" );
+        }
+    }
+    
+    
     public static void main( String[] args )
     {
         Fifteenpuzzle puzzle = new Fifteenpuzzle();
@@ -820,6 +828,8 @@ public class Fifteenpuzzle
         grounded_instances.addAll( puzzle.disambiguateDistancesRule() );
         grounded_instances.addAll( puzzle.createRule9() );
         
+        
+        puzzle.createHelperVarsInDictionary();
                 
         Rule.writeGroundedInstancesToFile( grounded_instances, args[0] + ".enc");
         

@@ -228,7 +228,7 @@ void encode_objective( std::set<string> state, int steps, int next_tile, int dis
             helper_variables += " ";
         }
         
-        helper_variables += boost::lexcial_cast<string>( dictionary["helper_" + boost::lexical_cast<string>( step )] );
+        helper_variables += boost::lexcial_cast<string>( dictionary["helper( index:" + boost::lexical_cast<string>( step ) + " )"] );
         
         
         // previous tiles:
@@ -237,7 +237,7 @@ void encode_objective( std::set<string> state, int steps, int next_tile, int dis
         {
             string clause = boost::lexical_cast<string>( dictionary["DIST( distance:0 step:" + boost::lexical_cast<string>( step ) + " tile:" + *it + " )"] );
             clause += " -";
-            clause += boost::lexcial_cast<string>( dictionary["helper_" + boost::lexical_cast<string>( step )] );
+            clause += boost::lexcial_cast<string>( dictionary["helper( index:" + boost::lexical_cast<string>( step ) + " )"] );
             
             objective.insert( clause );
         }
@@ -246,7 +246,7 @@ void encode_objective( std::set<string> state, int steps, int next_tile, int dis
         string clause = boost::lexical_cast<string>( dictionary["DIST( distance:" + boost::lexical_cast<string>( distance-1 ) 
                 + " step:" + boost::lexical_cast<string>( step ) + " tile:" + boost::lexical_cast<string>( next_tile ) + " )"] );
         clause += " -";
-        clause += boost::lexcial_cast<string>( dictionary["helper_" + boost::lexical_cast<string>( step )] );
+        clause += boost::lexcial_cast<string>( dictionary["helper( index:" + boost::lexical_cast<string>( step ) + " )"] );
         
         objective.insert( clause );
         
