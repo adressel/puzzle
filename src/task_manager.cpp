@@ -353,7 +353,6 @@ int main( int argc, char** argv )
                           number_of_clauses,
                           objective );
     
-    int test = 0;
     
     // while final state is not reached:
     while( !final_state_reached( state ) )
@@ -361,6 +360,13 @@ int main( int argc, char** argv )
         
         state.clear();
         objective.clear();
+        
+        if( next_tile == 16 )
+        {
+            remove( *(argv+4) );
+            break;
+        }
+        
         
         // 2. run sat solver
         
@@ -430,12 +436,6 @@ int main( int argc, char** argv )
         modify_cnf_file( cnf_file, new_state, objective, number_of_clauses );
         remove( *(argv+4) );        
         
-   
-     
-        test++;
-        if( test == 50 ) {
-            return 0; // delete this after testing
-        }
     }
 
     cl_2 = clock();
@@ -454,7 +454,7 @@ int main( int argc, char** argv )
         cout << *it << endl;
     }
 
-    cout << "\nRuntime: " << cl_2 - cl_1 << "ms" << endl;
+    cout << "\nRuntime: " << (float)cl_2 - (float)cl_1 << "ms" << endl;
     
     return 0;
 }
