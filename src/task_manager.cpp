@@ -503,7 +503,7 @@ void find_next_tile( int &next_tile, int &distance, std::set<string> &previous_t
         
     if( distance == 0 )
     {
-        find_next_file( next_tile, distance, previous_tiles, state, dictionary );
+        find_next_tile( next_tile, distance, previous_tiles, state, dictionary );
     }
 }
 
