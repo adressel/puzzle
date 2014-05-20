@@ -274,28 +274,6 @@ void encode_objective( int steps, int next_tile, int distance, std::map<string, 
 }
 
 
-bool final_state_reached( std::set<string> state )
-{
-    bool result = true;
-    
-    for( int i = 1; i <= 16; i++ )
-    {
-        bool temp = false;
-        
-        std::set<string>::iterator it;
-        for( it = state.begin(); it != state.end(); ++it )
-        {
-            temp == temp || ( (*it).find( "TP( position:" + boost::lexical_cast<string>( i ) + " step:") != string::npos
-                    && (*it).find( " tile:" + boost::lexical_cast<string>( i ) + " )" ) != string::npos );
-        }
-        
-        result = result && temp;
-    }
-    
-    return result;
-}
-
-
 int main( int argc, char** argv )
 {
     if( argc != 5 )
@@ -354,7 +332,7 @@ int main( int argc, char** argv )
     
     
     // while final state is not reached:
-    while( !final_state_reached( state ) )
+    while( true )
     {        
         
         state.clear();
@@ -446,7 +424,7 @@ int main( int argc, char** argv )
         cout << *it << endl;
     }
 
-    cout << "\nRuntime: " << ( (double)(end - start) ) / CLOCKS_PER_SEC << "s" << endl;
+    cout << "\nRuntime task_manager: " << ( (double)(end - start) ) / CLOCKS_PER_SEC << "s" << endl;
     cout << "Number of Operations: " << operations.size() << endl;
     
     
