@@ -144,19 +144,19 @@ void modify_cnf_file( string file_name, std::set<string> state, std::set<string>
 }
 
 
-void calculate_new_state( std::set<string> &outcome_state_as_string, std::set<string> &input_state_as_int, std::map<string, int> &dictionary )
+void calculate_new_state( std::set<string> outcome_state_as_string, std::set<string> &input_state_as_int, std::map<string, int> dictionary )
 {    
     std::set<string>::iterator it;
     for( it = outcome_state_as_string.begin(); it != outcome_state_as_string.end(); ++it )
     {
         string tile_position = *it;
-        int pos = tile_position.find( "step:" );
-        
-        if( tile_position.substr( pos+5, 2 ).compare( "11" ) == 0 )
-        {
-            tile_position.replace( pos+5, 2, "1");
+        int pos1 = tile_position.find( "step:" );
+        int pos2 = tile_position.find( " tile:" )
+        //if( tile_position.substr( pos+5, 2 ).compare( "11" ) == 0 )
+        //{
+            tile_position.replace( pos1+5, pos2-pos1-5 , "1");
             input_state_as_int.insert( boost::lexical_cast<string>( dictionary[tile_position] ) );
-        }
+        //}
     }
 }
 
