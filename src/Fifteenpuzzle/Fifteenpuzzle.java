@@ -789,7 +789,7 @@ public class Fifteenpuzzle
                     Set<Relation> outcomes = new HashSet<Relation>();
 
                     Set<Constant> constants2 = new HashSet<Constant>();
-                    constants2.add( new Constant<Integer>( "helper", s ) );
+                    constants2.add( new Constant<Integer>( "index", s ) );
                     outcomes.add( new Relation( "helper", false, constants2 ) );
                     rules.add( new Rule( conditions, outcomes ) );
                 }
