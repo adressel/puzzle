@@ -54,7 +54,6 @@ void populate_dictionary( string file_name, std::map<string, int> &variable_dict
             variable_dictionary_string_int.insert( std::pair<string, int>( s, i ) );
             variable_dictionary_int_string.insert( std::pair<int, string>( i, s ) );
             
-            // cout << "s: " << s << ", i: " << i << endl;
         }
     }
     
@@ -206,7 +205,6 @@ void decode_solution( string file_name, std::set<string> &outcome_state, std::se
                 if( variable.substr( 0, 6 ).compare( "helper" ) == 0 ) 
                 {
                     step = variable.substr( 14, variable.find( " )")-14 );
-                    cout << "step:" << step << endl;
                     break;
                 }
             }
