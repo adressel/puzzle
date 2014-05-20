@@ -462,7 +462,7 @@ int main( int argc, char** argv )
 // ugly stuff:
 
 
-void find_next_tile( int &next_tile, int &distance, std::set<string> &previous_tiles, std::set<string> &state, std::map<int, string> dictionary )
+void find_next_tile( int &next_tile, int &distance, std::set<string> &previous_tiles, std::set<string> state, std::map<int, string> dictionary )
 {
     previous_tiles.insert( boost::lexical_cast<string>( next_tile ) );
     
@@ -507,7 +507,7 @@ void calculate_distance( std::set<string> state, int tile, std::map<int, string>
     if( position == 0 ) 
     {
         cout << "error: position cannot be zero." << endl;
-        exit( 0 );
+        //exit( 0 );
     }
 
     
