@@ -9,6 +9,7 @@
 #include <queue>
 #include <map>
 #include <set>
+#include <regex>
 
 #include <time.h>
 
@@ -69,9 +70,9 @@ void collect_operations_from_solution( std::set<string> &all_operations, std::se
         int pos1 = (*it).find( "step:" );
         int pos2 = (*it).find( " )" );
         
-        int step = atoi( (*it).substr( pos1+5, pos2-pos1 ).c_str() );
+        int step = atoi( (*it).substr( pos1+5, pos2-pos1-5 ).c_str() );
         string s = *it;
-        all_operations.insert( s.replace( pos1+5, pos2-pos1, boost::lexical_cast<string>( step+number_of_operations ).c_str() ) );
+        all_operations.insert( s.replace( pos1+5, pos2-pos1-5, boost::lexical_cast<string>( step+number_of_operations ).c_str() ) );
     }
     number_of_operations += ops.size();
 }
@@ -280,7 +281,16 @@ bool final_state_reached( std::set<string> state )
     
     for( int i = 1; i <= 16; i++ )
     {
-        result = result && ( state.find( "TP( position:" + boost::lexical_cast<string>( i ) + " step:11 tile:" + boost::lexical_cast<string>( i ) + " )" ) != state.end() );
+        bool temp = false;
+        
+        std::set<string>::iterator it;
+        for( it = state.begin(); it != state.end(); ++it )
+        {
+            temp == temp || ( (*it).find( "TP( position:" + boost::lexical_cast<string>( i ) + " step:") != string::npos
+                    && (*it).find( " tile:" + boost::lexical_cast<string>( i ) + " )" ) != string::npos );
+        }
+        
+        result = result && temp;
     }
     
     return result;
