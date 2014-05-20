@@ -495,6 +495,17 @@ void find_next_tile( int &next_tile, int &distance, std::set<string> &previous_t
     }
     
     calculate_distance( state, next_tile, dictionary, distance );
+    
+    if( next_tile == 16 )
+    {
+        return;
+    }
+    
+        
+    if( distance == 0 )
+    {
+        find_next_file( next_tile, distance, previous_tiles, state, dictionary );
+    }
 }
 
 
