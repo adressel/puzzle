@@ -23,7 +23,7 @@
 using namespace std;
 
 // forward declaration of methods
-void find_next_tile( int &next_tile, int &distance, std::set<string> &previous_tiles, std::set<string> &state, std::map<int, string> dictionary );
+void find_next_tile( int &next_tile, int &distance, std::set<string> &previous_tiles, std::set<string> state, std::map<int, string> dictionary );
 void calculate_distance( std::set<string> state, int tile, std::map<int, string> dictionary, int &distance );
 void encode_initial_state( int _11, int _12, int _13, int _14, int _21, int _22, int _23, int _24, int _31, int _32, int _33, int _34, int _41, int _42, int _43, int _44,
                 std::map<string, int> &dictionary_si, std::map<int, string> &dictionary_is, string cnf_file_name, int &next_tile, int &distance, std::set<string> &previous_tiles ,int &number_of_clauses, std::set<string> objective );
