@@ -304,8 +304,7 @@ int main( int argc, char** argv )
         exit( 0 );
     }
    
-    clock_t cl_1, cl_2;
-    cl_1 = clock();
+    clock_t start = clock();
     
 
     string cnf_file = *(argv+1);
@@ -407,7 +406,7 @@ int main( int argc, char** argv )
         }
         
         
-        // output for testing:
+        /* output for testing:
         std::set<string>::iterator it_1;
         for( it_1 = ops.begin(); it_1 != ops.end(); ++it_1 )
         {
@@ -421,7 +420,7 @@ int main( int argc, char** argv )
         }
         
         cout << endl << endl;
-        
+        */
         
         // 4. add operations to set
         collect_operations_from_solution( operations, ops, number_of_operations );
@@ -438,7 +437,7 @@ int main( int argc, char** argv )
         
     }
 
-    cl_2 = clock();
+    clock_t end = clock();
 
     cout << "Operations: " << endl << endl;
     
@@ -447,14 +446,7 @@ int main( int argc, char** argv )
         cout << *it << endl;
     }
 
-    cout << endl << endl;
-
-    for( std::set<string>::iterator it = state.begin(); it != state.end(); ++it )
-    {
-        cout << *it << endl;
-    }
-
-    cout << "\nRuntime: " << ((float)cl_2 - (float)cl_1) / CLOCKS_PER_SEC << "ms" << endl;
+    cout << "\nRuntime: " << ( (double)(end - start) ) / CLOCKS_PER_SEC << "s" << endl;
     cout << "Number of Operations: " << operations.size() << endl;
     
     
