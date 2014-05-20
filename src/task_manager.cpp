@@ -424,7 +424,7 @@ int main( int argc, char** argv )
    
      
         test++;
-        if( test == 5 ) {
+        if( test == 50 ) {
             return 0; // delete this after testing
         }
     }
@@ -495,7 +495,6 @@ void calculate_distance( std::set<string> state, int tile, std::map<int, string>
     std::set<string>::iterator it;
     for( it = state.begin(); it != state.end(); ++it )
     {
-        cout << "test " << *it << endl;
         if( (*it).find( "tile:" + boost::lexical_cast<string>( tile ) + " " ) != string::npos )
         {
             int pos1 = (*it).find( "position:" );
@@ -508,7 +507,7 @@ void calculate_distance( std::set<string> state, int tile, std::map<int, string>
     if( position == 0 ) 
     {
         cout << "error: position cannot be zero." << endl;
-        //exit( 0 );
+        exit( 0 );
     }
 
     
