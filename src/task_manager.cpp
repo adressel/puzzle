@@ -447,14 +447,16 @@ int main( int argc, char** argv )
         cout << *it << endl;
     }
 
-    cout << "\nResult after " << operations.size() << " steps:" << endl << endl;
+    cout << endl << endl;
 
     for( std::set<string>::iterator it = state.begin(); it != state.end(); ++it )
     {
         cout << *it << endl;
     }
 
-    cout << "\nRuntime: " << (float)cl_2 - (float)cl_1 << "ms" << endl;
+    cout << "\nRuntime: " << ((float)cl_2 - (float)cl_1) / CLOCKS_PER_SEC << "ms" << endl;
+    cout << "Number of Operations: " << operations.size() << endl;
+    
     
     return 0;
 }
