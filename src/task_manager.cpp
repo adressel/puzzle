@@ -495,6 +495,7 @@ void calculate_distance( std::set<string> state, int tile, std::map<int, string>
     std::set<string>::iterator it;
     for( it = state.begin(); it != state.end(); ++it )
     {
+        cout << "test " << *it << endl;
         if( dictionary[atoi( (*it).c_str() )].find( "tile:" + boost::lexical_cast<string>( tile ) + " " ) != string::npos )
         {
             int pos1 = dictionary[atoi( (*it).c_str() )].find( "position:" );
