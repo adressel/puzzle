@@ -850,7 +850,7 @@ public class Fifteenpuzzle
         grounded_instances.addAll( puzzle.createRule9() );
         
         
-        puzzle.disambiguateHelperVariables();
+        grounded_instances.addAll( puzzle.disambiguateHelperVariables() );
                 
         Rule.writeGroundedInstancesToFile( grounded_instances, args[0] + ".enc");
         
