@@ -151,7 +151,7 @@ void calculate_new_state( std::set<string> outcome_state_as_string, std::set<str
     {
         string tile_position = *it;
         int pos1 = tile_position.find( "step:" );
-        int pos2 = tile_position.find( " tile:" )
+        int pos2 = tile_position.find( " tile:" );
         //if( tile_position.substr( pos+5, 2 ).compare( "11" ) == 0 )
         //{
             tile_position.replace( pos1+5, pos2-pos1-5 , "1");
