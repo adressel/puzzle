@@ -496,12 +496,12 @@ void calculate_distance( std::set<string> state, int tile, std::map<int, string>
     for( it = state.begin(); it != state.end(); ++it )
     {
         cout << "test " << *it << endl;
-        if( dictionary[atoi( (*it).c_str() )].find( "tile:" + boost::lexical_cast<string>( tile ) + " " ) != string::npos )
+        if( (*it).find( "tile:" + boost::lexical_cast<string>( tile ) + " " ) != string::npos )
         {
-            int pos1 = dictionary[atoi( (*it).c_str() )].find( "position:" );
-            int pos2 = dictionary[atoi( (*it).c_str() )].find( " step:" );
+            int pos1 = (*it).find( "position:" );
+            int pos2 = (*it).find( " step:" );
 
-            position = atoi( dictionary[atoi( (*it).c_str() )].substr( pos1+9, pos2-pos1-9).c_str() );
+            position = atoi( (*it).substr( pos1+9, pos2-pos1-9).c_str() );
         }
     }
     
@@ -674,6 +674,23 @@ void encode_initial_state( int _11, int _12, int _13, int _14,
     state.insert( boost::lexical_cast<string>( dictionary_si["TP( position:15 step:1 tile:" + boost::lexical_cast<string>( _43 ) + " )"] ) );
     state.insert( boost::lexical_cast<string>( dictionary_si["TP( position:16 step:1 tile:" + boost::lexical_cast<string>( _44 ) + " )"] ) );
     
+    std::set<string> state_string;
+    state_string.insert( "TP( position:1 step:1 tile:" + boost::lexical_cast<string>( _11 ) + " )" );
+    state_string.insert( "TP( position:2 step:1 tile:" + boost::lexical_cast<string>( _12 ) + " )" );
+    state_string.insert( "TP( position:3 step:1 tile:" + boost::lexical_cast<string>( _13 ) + " )" );
+    state_string.insert( "TP( position:4 step:1 tile:" + boost::lexical_cast<string>( _14 ) + " )" );
+    state_string.insert( "TP( position:5 step:1 tile:" + boost::lexical_cast<string>( _21 ) + " )" );
+    state_string.insert( "TP( position:6 step:1 tile:" + boost::lexical_cast<string>( _22 ) + " )" );
+    state_string.insert( "TP( position:7 step:1 tile:" + boost::lexical_cast<string>( _23 ) + " )" );
+    state_string.insert( "TP( position:8 step:1 tile:" + boost::lexical_cast<string>( _24 ) + " )" );
+    state_string.insert( "TP( position:9 step:1 tile:" + boost::lexical_cast<string>( _31 ) + " )" );
+    state_string.insert( "TP( position:10 step:1 tile:" + boost::lexical_cast<string>( _32 ) + " )" );
+    state_string.insert( "TP( position:11 step:1 tile:" + boost::lexical_cast<string>( _33 ) + " )" );
+    state_string.insert( "TP( position:12 step:1 tile:" + boost::lexical_cast<string>( _34 ) + " )" );
+    state_string.insert( "TP( position:13 step:1 tile:" + boost::lexical_cast<string>( _41 ) + " )" );
+    state_string.insert( "TP( position:14 step:1 tile:" + boost::lexical_cast<string>( _42 ) + " )" );
+    state_string.insert( "TP( position:15 step:1 tile:" + boost::lexical_cast<string>( _43 ) + " )" );
+    state_string.insert( "TP( position:16 step:1 tile:" + boost::lexical_cast<string>( _44 ) + " )" );
     
     // set next_tile
     if( _11 != 1 )
@@ -784,7 +801,7 @@ void encode_initial_state( int _11, int _12, int _13, int _14,
     
     
     // distance
-    calculate_distance( state, next_tile, dictionary_is, distance );
+    calculate_distance( state_string, next_tile, dictionary_is, distance );
     
     
     encode_objective( 11, next_tile, distance, dictionary_si, previous_tiles, objective );
