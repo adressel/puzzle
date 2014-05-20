@@ -35,7 +35,7 @@ public class Fifteenpuzzle
             this.position_values[i] = i + 1;
         }
         
-        this.step_values = new Integer[11];
+        this.step_values = new Integer[12];
         for( int i = 0; i < step_values.length; i++ ) {
             this.step_values[i] = i + 1;
         }

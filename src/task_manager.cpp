@@ -421,7 +421,7 @@ int main( int argc, char** argv )
         collect_operations_from_solution( operations, ops, number_of_operations );
         
         // 5. calculate new objective
-        encode_objective( 11, next_tile, distance, variable_dictionary_string_int, previous_tiles, objective );
+        encode_objective( 12, next_tile, distance, variable_dictionary_string_int, previous_tiles, objective );
             
         // 5. write new state and new objective to end of file
         std::set<string> new_state;
@@ -823,7 +823,7 @@ void encode_initial_state( int _11, int _12, int _13, int _14,
     calculate_distance( state_string, next_tile, dictionary_is, distance );
     
     
-    encode_objective( 11, next_tile, distance, dictionary_si, previous_tiles, objective );
+    encode_objective( 12, next_tile, distance, dictionary_si, previous_tiles, objective );
     modify_cnf_file( cnf_file_name, state, objective, number_of_clauses );
     
 }
