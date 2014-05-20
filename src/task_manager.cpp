@@ -9,6 +9,7 @@
 #include <queue>
 #include <map>
 #include <set>
+#include <list>
 
 #include <time.h>
 
@@ -61,7 +62,7 @@ void populate_dictionary( string file_name, std::map<string, int> &variable_dict
 }
 
 
-void collect_operations_from_solution( std::set<string> &all_operations, std::set<string> &ops, int &number_of_operations )
+void collect_operations_from_solution( std::list<string> &all_operations, std::set<string> &ops, int &number_of_operations )
 {
     std::set<string>::iterator it;
     for( it = ops.begin(); it != ops.end(); ++it )
@@ -71,7 +72,7 @@ void collect_operations_from_solution( std::set<string> &all_operations, std::se
         
         int step = atoi( (*it).substr( pos1+5, pos2-pos1-5 ).c_str() );
         string s = *it;
-        all_operations.insert( s.replace( pos1+5, pos2-pos1-5, boost::lexical_cast<string>( step+number_of_operations ).c_str() ) );
+        all_operations.push_back( s.replace( pos1+5, pos2-pos1-5, boost::lexical_cast<string>( step+number_of_operations ).c_str() ) );
     }
     number_of_operations += ops.size();
 }
@@ -274,25 +275,20 @@ void encode_objective( int steps, int next_tile, int distance, std::map<string, 
 }
 
 
-bool final_state_reached( std::set<string> state )
+bool compare_operations( const string &first, const string &second )
 {
-    bool result = true;
+    int pos1 = first.find( "step:" );
+    int pos2 = first.find( " )" );
     
-    for( int i = 1; i <= 16; i++ )
-    {
-        bool temp = false;
-        
-        std::set<string>::iterator it;
-        for( it = state.begin(); it != state.end(); ++it )
-        {
-            temp == temp || ( (*it).find( "TP( position:" + boost::lexical_cast<string>( i ) + " step:") != string::npos
-                    && (*it).find( " tile:" + boost::lexical_cast<string>( i ) + " )" ) != string::npos );
-        }
-        
-        result = result && temp;
-    }
+    int step_first = atoi( first.substr( pos1+5, pos2-pos1-5 ).c_str() );
     
-    return result;
+    
+    pos1 = second.find( "step:" );
+    pos2 = second.find( " )" );
+    
+    int step_second = atoi( second.substr( pos1+5, pos2-pos1-5 ).c_str() );
+    
+    return step_first > step_second;
 }
 
 
@@ -318,7 +314,7 @@ int main( int argc, char** argv )
     
     
     // operations
-    std::set<string> operations;
+    std::list<string> operations;
     int number_of_operations = 0;
 
 
@@ -354,7 +350,7 @@ int main( int argc, char** argv )
     
     
     // while final state is not reached:
-    while( !final_state_reached( state ) )
+    while( true )
     {        
         
         state.clear();
@@ -439,9 +435,11 @@ int main( int argc, char** argv )
 
     clock_t end = clock();
 
+    operations.sort( compare_operations );
+    
     cout << "Operations: " << endl << endl;
     
-    for( std::set<string>::iterator it = operations.begin(); it != operations.end(); ++it )
+    for( std::list<string>::iterator it = operations.begin(); it != operations.end(); ++it )
     {
         cout << *it << endl;
     }
@@ -452,9 +450,6 @@ int main( int argc, char** argv )
     
     return 0;
 }
-
-
-
 
 
 
